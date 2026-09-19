@@ -428,7 +428,50 @@
   .mbar span { color: var(--total-muted); font-size: 0.9rem; }
   .mbar b { font-family: var(--font-head); font-size: 1.5rem; font-variant-numeric: tabular-nums; }
 
-  .account { margin-top: auto; display: grid; gap: 8px; padding: 0 2px; }
+  .team-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px; margin-bottom: 16px; display: grid; gap: 14px; max-width: 720px;
+  }
+  .team-card h2 { font-family: var(--font-head); font-size: 1.3rem; letter-spacing: -0.01em; margin: 0; }
+  .team-card p { margin: 0; }
+  .team-card .hint { margin: 0; }
+  .team-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .badge {
+    font-size: 0.75rem; font-weight: 600; padding: 2px 9px; border-radius: 99px;
+    color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; justify-self: start; flex-wrap: wrap; }
+  .seg button {
+    font: inherit; padding: 8px 14px; min-height: 40px; background: transparent; color: var(--muted);
+    border: 0; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .mlist { display: flex; flex-direction: column; gap: 8px; }
+  .mrow {
+    display: grid; grid-template-columns: 40px minmax(0, 1fr) auto auto; gap: 12px; align-items: center;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg);
+  }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: grid; place-items: center;
+    font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mrow-main { display: flex; flex-direction: column; min-width: 0; }
+  .mrow-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mrow-meta { color: var(--muted); font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .invite-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+  .invite-row input { font-size: 0.85rem; }
+  .invite-wrap { display: grid; gap: 4px; }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 0.95rem; cursor: pointer; }
+  .check input { margin-top: 4px; width: 18px; height: 18px; flex: none; }
+  @media (max-width: 620px) {
+    .mrow { grid-template-columns: 40px minmax(0, 1fr) auto; }
+    .mrow > :last-child { grid-column: 1 / -1; justify-self: end; }
+    .invite-row { grid-template-columns: 1fr 1fr; }
+    .invite-row input { grid-column: 1 / -1; }
+  }
+  .nav-team { margin-top: auto; }
+  .account { margin-top: 0; display: grid; gap: 8px; padding: 0 2px; }
   .account-user { min-width: 0; padding: 0 8px 2px; }
   .account-name, .account-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .account-name { font-weight: 600; }
@@ -436,6 +479,7 @@
   .account-btn { width: 100%; }
 
   @media (max-width: 900px) {
+    .nav-team { margin-top: 0; }
     .account { margin-top: 0; flex: 0 0 auto; }
     .account-user { display: none; }
     .account-btn { width: auto; white-space: nowrap; }
@@ -505,6 +549,12 @@
       <button type="button" class="nav-item" data-go="estoque">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg>
         <span>Estoque</span>
+      </button>
+    </div>
+    <div class="nav nav-team">
+      <button type="button" class="nav-item" data-go="equipe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.8.2 5 2.4 5 5.3"/></svg>
+        <span>Equipe</span>
       </button>
     </div>
     <div class="account" id="account-box">
@@ -653,6 +703,17 @@
       </div>
     </div>
 
+    <!-- EQUIPE -->
+    <div class="view" id="view-equipe" hidden>
+      <header class="top">
+        <div>
+          <h1>Equipe</h1>
+          <p>Convide pessoas para ver e editar os mesmos produtos e o mesmo estoque, em tempo real.</p>
+        </div>
+      </header>
+      <div id="team-body"></div>
+    </div>
+
     <!-- ESTOQUE -->
     <datalist id="tipos-filamento">
         <option value="PLA"></option><option value="PLA+"></option><option value="PETG"></option><option value="ABS"></option>
@@ -766,7 +827,7 @@ import {
   setPersistence, browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {
-  getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot
+  getFirestore, collection, doc, setDoc, deleteDoc, getDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -818,11 +879,11 @@ const googleProvider = new GoogleAuthProvider();
     return el;
   }
   function field(label, input, cls) { return h("label", { class: "f " + (cls || "") }, [h("span", { text: label }), input]); }
-  function twoStep(btn, action) {
+  function twoStep(btn, action, confirmLabel) {
     var orig = btn.textContent, armed = false, t;
     btn.addEventListener("click", function () {
       if (!armed) {
-        armed = true; btn.textContent = "Confirmar exclusão";
+        armed = true; btn.textContent = confirmLabel || "Confirmar exclusão";
         t = setTimeout(function () { armed = false; btn.textContent = orig; }, 4000);
       } else { clearTimeout(t); armed = false; btn.textContent = orig; action(); }
     });
@@ -1083,7 +1144,9 @@ const googleProvider = new GoogleAuthProvider();
       if (invSeq === seq) invDirty = false;
       setStatus(storageLabel());
     }, function () {
-      invSaving = false; store.mode = "local"; lsWrite(); lsWriteInv(); invDirty = false;
+      invSaving = false;
+      if (ws.type === "team") { setStatus("Não foi possível salvar na equipe. Tente de novo em instantes."); return; }
+      store.mode = "local"; lsWrite(); lsWriteInv(); invDirty = false;
       setStatus("Não foi possível salvar na conta. Seus dados ficaram salvos neste navegador.");
     });
   }
@@ -1172,7 +1235,12 @@ const googleProvider = new GoogleAuthProvider();
   function byId(id) { for (var i = 0; i < products.length; i++) if (products[i].id === id) return products[i]; return null; }
   function byUpdated(a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); }
   function storageLabel() {
-    return store.mode === "cloud" ? "Seus produtos ficam salvos na sua conta." : "Seus produtos ficam salvos neste navegador.";
+    if (store.mode !== "cloud") return "Seus produtos ficam salvos neste navegador.";
+    if (ws.type === "team") {
+      var t = (teams || []).filter(function (x) { return x.id === ws.teamId; })[0];
+      return "Dados compartilhados com a equipe" + (t ? " " + t.name : "") + ".";
+    }
+    return "Seus produtos ficam salvos na sua conta.";
   }
   function setStatus(t) { $$(".save-status").forEach(function (el) { el.textContent = t; }); }
 
@@ -1196,7 +1264,9 @@ const googleProvider = new GoogleAuthProvider();
       if (editSeq[id] === seq) dirty[id] = false;
       setStatus(storageLabel());
     }, function () {
-      saving[id] = false; store.mode = "local"; lsWrite(); lsWriteInv(); dirty[id] = false;
+      saving[id] = false;
+      if (ws.type === "team") { setStatus("Não foi possível salvar na equipe. Tente de novo em instantes."); return; }
+      store.mode = "local"; lsWrite(); lsWriteInv(); dirty[id] = false;
       setStatus("Não foi possível salvar na conta. Seus produtos ficaram salvos neste navegador.");
     });
   }
@@ -1222,20 +1292,21 @@ const googleProvider = new GoogleAuthProvider();
     });
     var definitive = !snap.metadata.fromCache;
     var firstDef = definitive && !synced;
+    var personal = ws.type === "personal";
     if (firstDef) synced = true;
 
     if (invDoc && !invDirty) { inventory = Array.isArray(invDoc.items) ? invDoc.items : []; inventory.forEach(normalizeFilament); }
-    else if (firstDef && !invDoc && inventory.length) commitInv();
+    else if (firstDef && !invDoc && inventory.length && personal) commitInv();
 
     var merge = true;
-    if (firstDef && incoming.length === 0 && products.length) {
+    if (firstDef && incoming.length === 0 && products.length && personal) {
       // produtos criados antes da conta estar disponível: envia para a conta
       products.forEach(function (p) { commit(p.id); });
       merge = false;
     } else if (!definitive && incoming.length === 0 && !synced) {
       merge = false;
     }
-    if (firstDef) { try { localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_INV); } catch (e) {} }
+    if (firstDef && personal) { try { localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_INV); } catch (e) {} }
     if (merge) {
       var map = {}; incoming.forEach(function (o) { map[o.id] = o; });
       var out = incoming.map(function (o) { return dirty[o.id] ? (byId(o.id) || o) : o; });
@@ -1248,19 +1319,19 @@ const googleProvider = new GoogleAuthProvider();
   var cloudUnsub = null;
   var currentUser = null;
 
-  function makeCloudStore(uid) {
-    var userProducts = collection(db, "users", uid, "products");
+  function makeCloudStore(base) {
+    var colRef = collection.apply(null, [db].concat(base, ["products"]));
     return {
       mode: "cloud",
       col: {
         doc: function (id) {
-          var ref = doc(db, "users", uid, "products", id);
+          var ref = doc.apply(null, [db].concat(base, ["products", id]));
           return {
             set: function (data) { return setDoc(ref, data); },
             delete: function () { return deleteDoc(ref); }
           };
         },
-        onSnapshot: function (cb, err) { return onSnapshot(userProducts, cb, err); }
+        onSnapshot: function (cb, err) { return onSnapshot(colRef, cb, err); }
       }
     };
   }
@@ -1279,6 +1350,10 @@ const googleProvider = new GoogleAuthProvider();
 
   function stopCloud() {
     if (cloudUnsub) { cloudUnsub(); cloudUnsub = null; }
+    if (teamsUnsub) { teamsUnsub(); teamsUnsub = null; }
+    teamUnsubs.forEach(function (u) { u(); }); teamUnsubs = []; watchedTeam = null;
+    teams = []; teamMembers = []; teamInvites = []; viewTeamId = null;
+    ws = { type: "personal", teamId: null };
     currentUser = null;
     store.mode = "local"; store.col = null; synced = false;
     products = lsRead().sort(byUpdated);
@@ -1290,11 +1365,20 @@ const googleProvider = new GoogleAuthProvider();
   function startCloud(user) {
     if (cloudUnsub) cloudUnsub();
     currentUser = user;
-    store = makeCloudStore(user.uid);
+    // dados da equipe nunca se misturam com os dados locais deste navegador
+    if (ws.type === "team") { products = []; inventory = []; }
+    store = makeCloudStore(dataBase(user));
     synced = false;
-    setStatus("Carregando seus dados…");
+    setStatus("Carregando os dados…");
+    var startedFor = ws.type + ":" + ws.teamId;
     cloudUnsub = store.col.onSnapshot(onCloud, function (err) {
       console.error("Firestore:", err);
+      if (startedFor !== ws.type + ":" + ws.teamId) return;
+      if (ws.type === "team") {
+        if (err && err.code === "permission-denied") teamAccessLost(ws.teamId);
+        else setStatus("Sem conexão com a equipe agora. Recarregue a página se persistir.");
+        return;
+      }
       store.mode = "local";
       store.col = null;
       lsWrite(); lsWriteInv();
@@ -1316,6 +1400,363 @@ const googleProvider = new GoogleAuthProvider();
     catch (err) { console.error("Logout:", err); toast("Não foi possível sair."); }
   }
 
+  /* ---------- equipe (dados compartilhados) ---------- */
+  var WS_KEY = "ws3d-";
+  var INVITE_KEY = "convite3d";
+  var ws = { type: "personal", teamId: null };
+  var teams = [];
+  var teamsUnsub = null, teamUnsubs = [], watchedTeam = null;
+  var viewTeamId = null, teamMembers = [], teamInvites = [];
+  var pendingInvite = null, teamBusy = false, lostHandled = {};
+  var teamNameDraft = "", copyChoice = true;
+
+  function dataBase(user) { return ws.type === "team" && ws.teamId ? ["teams", ws.teamId] : ["users", user.uid]; }
+  function currentTeam() {
+    return teams.filter(function (t) { return t.id === viewTeamId; })[0] || teams[0] || null;
+  }
+  function randomToken(len) {
+    var chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789", a = new Uint8Array(len), out = "";
+    crypto.getRandomValues(a);
+    for (var i = 0; i < len; i++) out += chars[a[i] % chars.length];
+    return out;
+  }
+  function inviteLink(tid, token) { return location.origin + location.pathname + "?convite=" + tid + "." + token; }
+  function memberData(u, role, token) {
+    var d = { uid: u.uid, name: u.displayName || "", email: u.email || "", photo: u.photoURL || "", role: role, joinedAt: Date.now() };
+    if (token) d.inviteToken = token;
+    return d;
+  }
+
+  function readInviteFromUrl() {
+    try {
+      var q = new URLSearchParams(location.search).get("convite");
+      if (q) sessionStorage.setItem(INVITE_KEY, q);
+      var raw = q || sessionStorage.getItem(INVITE_KEY);
+      if (!raw) return null;
+      var parts = raw.split(".");
+      if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
+      return { teamId: parts[0], token: parts[1], info: null, error: "", loading: false };
+    } catch (e) { return null; }
+  }
+  function clearInvite() {
+    pendingInvite = null;
+    try { sessionStorage.removeItem(INVITE_KEY); } catch (e) {}
+  }
+
+  function readWorkspacePref(user) {
+    try {
+      var v = localStorage.getItem(WS_KEY + user.uid);
+      if (v && v !== "personal") return { type: "team", teamId: v };
+    } catch (e) {}
+    return { type: "personal", teamId: null };
+  }
+  function flushAll() {
+    Object.keys(dirty).forEach(function (id) { if (dirty[id]) flush(id); });
+    if (invDirty) flushInv();
+  }
+  function resetData() {
+    Object.keys(timers).forEach(function (k) { clearTimeout(timers[k]); });
+    clearTimeout(invTimer);
+    products = []; inventory = [];
+    dirty = {}; editSeq = {}; saving = {}; again = {}; timers = {}; deleted = {};
+    invDirty = false; invSaving = false; invAgain = false;
+    ui.openId = null; ui.edit = null; ui.addTo = null; ui.invEdit = null;
+  }
+  function switchWorkspace(type, teamId) {
+    if (!currentUser) return;
+    flushAll();
+    ws = { type: type === "team" ? "team" : "personal", teamId: type === "team" ? teamId : null };
+    try { localStorage.setItem(WS_KEY + currentUser.uid, ws.type === "team" ? ws.teamId : "personal"); } catch (e) {}
+    if (ws.teamId) viewTeamId = ws.teamId;
+    resetData();
+    startCloud(currentUser);
+    watchTeam();
+    rerender(); updateHome(); renderTeam();
+  }
+  function teamAccessLost(tid) {
+    if (lostHandled[tid]) return;
+    lostHandled[tid] = true;
+    setTimeout(function () { delete lostHandled[tid]; }, 3000);
+    if (currentUser) deleteDoc(doc(db, "users", currentUser.uid, "teams", tid)).catch(function () {});
+    if (ws.teamId === tid) {
+      toast("Você não tem mais acesso a essa equipe. Voltando para os seus dados.");
+      switchWorkspace("personal");
+    }
+  }
+
+  function watchMyTeams(user) {
+    if (teamsUnsub) teamsUnsub();
+    teamsUnsub = onSnapshot(collection(db, "users", user.uid, "teams"), function (snap) {
+      teams = snap.docs.map(function (d) {
+        var x = d.data();
+        return { id: d.id, name: x.name || "Equipe", role: x.role === "owner" ? "owner" : "member" };
+      }).sort(function (a, b) { return a.name.localeCompare(b.name, "pt-BR"); });
+      if (!viewTeamId || !teams.some(function (t) { return t.id === viewTeamId; })) {
+        viewTeamId = ws.teamId || (teams[0] && teams[0].id) || null;
+      }
+      watchTeam();
+      setStatus(storageLabel());
+      renderTeam();
+    }, function (err) { console.error("Equipes:", err); });
+  }
+  function watchTeam() {
+    var t = currentTeam(), key = t ? t.id + ":" + t.role : "";
+    if (key === watchedTeam) return;
+    teamUnsubs.forEach(function (u) { u(); }); teamUnsubs = [];
+    teamMembers = []; teamInvites = []; watchedTeam = key;
+    if (!t || !currentUser) return;
+    var tid = t.id;
+    teamUnsubs.push(onSnapshot(collection(db, "teams", tid, "members"), function (snap) {
+      teamMembers = snap.docs.map(function (d) { return d.data(); }).sort(function (a, b) {
+        if (a.role !== b.role) return a.role === "owner" ? -1 : 1;
+        return (a.name || a.email || "").localeCompare(b.name || b.email || "", "pt-BR");
+      });
+      renderTeam();
+    }, function (err) { if (err && err.code === "permission-denied") teamAccessLost(tid); }));
+    if (t.role === "owner") {
+      teamUnsubs.push(onSnapshot(collection(db, "teams", tid, "invites"), function (snap) {
+        teamInvites = snap.docs.map(function (d) { var x = d.data(); x.token = d.id; return x; })
+          .sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+        renderTeam();
+      }, function (err) { console.error("Convites:", err); }));
+    }
+  }
+
+  async function loadInviteInfo() {
+    var inv = pendingInvite;
+    if (!inv || !currentUser || inv.info || inv.error || inv.loading) return;
+    inv.loading = true;
+    try {
+      var snap = await getDoc(doc(db, "teams", inv.teamId, "invites", inv.token));
+      var d = snap.exists() ? snap.data() : null;
+      if (!d || d.active !== true || !(d.expiresAt > Date.now())) {
+        inv.error = "Este convite não existe mais ou expirou. Peça um novo link para quem convidou.";
+      } else inv.info = { teamName: d.teamName || "Equipe" };
+    } catch (e) {
+      console.error("Convite:", e);
+      inv.error = "Não foi possível verificar o convite. Confira se você entrou com a conta Google certa e tente de novo.";
+    }
+    inv.loading = false;
+    renderTeam();
+  }
+  async function acceptInvite() {
+    var inv = pendingInvite, u = currentUser;
+    if (!inv || !u || !inv.info || teamBusy) return;
+    teamBusy = true; renderTeam();
+    try {
+      var tid = inv.teamId, name = inv.info.teamName;
+      if (!teams.some(function (t) { return t.id === tid; })) {
+        await setDoc(doc(db, "teams", tid, "members", u.uid), memberData(u, "member", inv.token));
+        await setDoc(doc(db, "users", u.uid, "teams", tid), { teamId: tid, name: name, role: "member", joinedAt: Date.now() });
+      }
+      clearInvite();
+      switchWorkspace("team", tid);
+      toast("Você entrou na equipe " + name + ".");
+    } catch (e) {
+      console.error("Entrar na equipe:", e);
+      toast("Não foi possível entrar na equipe. O convite pode ter expirado ou sido revogado.");
+    }
+    teamBusy = false; renderTeam();
+  }
+  async function createTeam(name, copy) {
+    var u = currentUser;
+    name = (name || "").trim();
+    if (!u || teamBusy) return;
+    if (!name) { toast("Dê um nome para a equipe."); return; }
+    teamBusy = true; renderTeam();
+    try {
+      var ref = doc(collection(db, "teams")), tid = ref.id;
+      await setDoc(ref, { name: name, ownerUid: u.uid, createdAt: Date.now() });
+      await setDoc(doc(db, "teams", tid, "members", u.uid), memberData(u, "owner"));
+      await setDoc(doc(db, "users", u.uid, "teams", tid), { teamId: tid, name: name, role: "owner", joinedAt: Date.now() });
+      if (copy) {
+        var jobs = products.map(function (p) { return setDoc(doc(db, "teams", tid, "products", p.id), clone(p)); });
+        if (inventory.length) jobs.push(setDoc(doc(db, "teams", tid, "products", "_estoque"), { items: clone(inventory) }));
+        await Promise.all(jobs);
+      }
+      teamNameDraft = "";
+      switchWorkspace("team", tid);
+      toast("Equipe criada. Agora gere um link de convite.");
+    } catch (e) {
+      console.error("Criar equipe:", e);
+      toast("Não foi possível criar a equipe. Confira se as regras do Firestore foram atualizadas.");
+    }
+    teamBusy = false; renderTeam();
+  }
+  async function createInvite() {
+    var t = currentTeam(); if (!t || !currentUser) return;
+    try {
+      await setDoc(doc(db, "teams", t.id, "invites", randomToken(24)), {
+        active: true, createdBy: currentUser.uid, createdAt: Date.now(),
+        expiresAt: Date.now() + 7 * 86400000, teamName: t.name
+      });
+      toast("Link de convite criado.");
+    } catch (e) { console.error("Convite:", e); toast("Não foi possível criar o link."); }
+  }
+  async function revokeInvite(t, token) {
+    try { await deleteDoc(doc(db, "teams", t.id, "invites", token)); toast("Link revogado."); }
+    catch (e) { console.error(e); toast("Não foi possível revogar o link."); }
+  }
+  async function removeMember(t, m) {
+    try { await deleteDoc(doc(db, "teams", t.id, "members", m.uid)); toast((m.name || "Membro") + " foi removido da equipe."); }
+    catch (e) { console.error(e); toast("Não foi possível remover o membro."); }
+  }
+  async function leaveTeam(t) {
+    try {
+      lostHandled[t.id] = true;
+      await deleteDoc(doc(db, "teams", t.id, "members", currentUser.uid));
+      await deleteDoc(doc(db, "users", currentUser.uid, "teams", t.id));
+      if (ws.teamId === t.id) switchWorkspace("personal");
+      toast("Você saiu da equipe.");
+    } catch (e) { console.error(e); toast("Não foi possível sair da equipe."); }
+    setTimeout(function () { delete lostHandled[t.id]; }, 3000);
+  }
+  function copyText(text, input) {
+    var fallback = function () { input.focus(); input.select(); toast("Selecione e copie o link (Ctrl+C)."); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast("Link copiado."); }, fallback);
+    } else fallback();
+  }
+
+  /* ----- tela da equipe ----- */
+  function avatar(m) {
+    var box = h("span", { class: "avatar" });
+    if (m.photo) {
+      var img = document.createElement("img"); img.alt = ""; img.referrerPolicy = "no-referrer"; img.src = m.photo; box.appendChild(img);
+    } else box.textContent = ((m.name || m.email || "?").trim()[0] || "?").toUpperCase();
+    return box;
+  }
+  function badge(role) { return h("span", { class: "badge", text: role === "owner" ? "Dono" : "Membro" }); }
+
+  function inviteCard() {
+    var inv = pendingInvite, kids = [h("h2", { text: "Convite para uma equipe" })];
+    if (!currentUser) {
+      kids.push(h("p", { class: "hint", text: "Você recebeu um link de convite. Entre com sua conta Google para ver a equipe e aceitar." }));
+      kids.push(h("button", { type: "button", class: "btn primary", text: "Entrar com Google", onclick: loginGoogle }));
+    } else if (inv.error) {
+      kids.push(h("p", { class: "hint", text: inv.error }));
+      kids.push(h("button", { type: "button", class: "btn", text: "Fechar", onclick: function () { clearInvite(); renderTeam(); } }));
+    } else if (!inv.info) {
+      kids.push(h("p", { class: "hint", text: "Verificando o convite…" }));
+    } else {
+      var already = teams.some(function (t) { return t.id === inv.teamId; });
+      kids.push(h("p", { text: "Você foi convidado para a equipe " + inv.info.teamName + "." }));
+      kids.push(h("p", { class: "hint", text: "Ao entrar, você vê e edita os mesmos produtos e o mesmo estoque de todos os membros." }));
+      kids.push(h("button", { type: "button", class: "btn primary", text: already ? "Abrir equipe" : "Entrar na equipe", disabled: teamBusy, onclick: acceptInvite }));
+    }
+    return h("div", { class: "team-card" }, kids);
+  }
+  function signedOutCard() {
+    return h("div", { class: "team-card" }, [
+      h("h2", { text: "Entre para usar equipes" }),
+      h("p", { class: "hint", text: "Com uma conta Google você cria uma equipe, gera links de convite e trabalha nos mesmos dados que outras pessoas." }),
+      h("button", { type: "button", class: "btn primary", text: "Entrar com Google", onclick: loginGoogle })
+    ]);
+  }
+  function createTeamCard() {
+    var nameIn = h("input", { type: "text", placeholder: "Ex.: Oficina 3D", maxlength: "40", value: teamNameDraft,
+      oninput: function (e) { teamNameDraft = e.target.value; } });
+    var chk = h("input", { type: "checkbox", onchange: function (e) { copyChoice = e.target.checked; } });
+    chk.checked = copyChoice;
+    return h("div", { class: "team-card" }, [
+      h("h2", { text: "Criar equipe" }),
+      h("p", { class: "hint", text: "Uma equipe tem dados compartilhados: todos os membros veem e editam os mesmos produtos e o mesmo estoque. Você será o dono e gera os links de convite." }),
+      field("Nome da equipe", nameIn),
+      h("label", { class: "check" }, [chk, h("span", { text: "Copiar os produtos e o estoque que estou vendo agora para a equipe" })]),
+      h("div", {}, [h("button", { type: "button", class: "btn primary", text: teamBusy ? "Criando…" : "Criar equipe", disabled: teamBusy,
+        onclick: function () { createTeam(teamNameDraft, copyChoice); } })])
+    ]);
+  }
+  function memberRow(t, m, isOwner) {
+    var me = currentUser.uid;
+    var kids = [avatar(m),
+      h("span", { class: "mrow-main" }, [
+        h("span", { class: "mrow-name", text: (m.name || m.email || "Sem nome") + (m.uid === me ? " (você)" : "") }),
+        h("span", { class: "mrow-meta", text: m.email || "" })
+      ]),
+      badge(m.role)];
+    if (isOwner && m.uid !== me) {
+      var rm = h("button", { type: "button", class: "btn danger small", text: "Remover" });
+      twoStep(rm, function () { removeMember(t, m); }, "Confirmar remoção");
+      kids.push(rm);
+    } else kids.push(h("span"));
+    return h("div", { class: "mrow" }, kids);
+  }
+  function inviteRow(t, i) {
+    var link = inviteLink(t.id, i.token);
+    var input = h("input", { type: "text", readonly: true, value: link, "aria-label": "Link de convite",
+      onfocus: function (e) { e.target.select(); } });
+    return h("div", { class: "invite-wrap" }, [
+      h("div", { class: "invite-row" }, [
+        input,
+        h("button", { type: "button", class: "btn small", text: "Copiar", onclick: function () { copyText(link, input); } }),
+        h("button", { type: "button", class: "btn danger small", text: "Revogar", onclick: function () { revokeInvite(t, i.token); } })
+      ]),
+      h("span", { class: "mrow-meta", text: "Expira em " + new Date(i.expiresAt).toLocaleDateString("pt-BR") })
+    ]);
+  }
+  function teamPanel() {
+    var t = currentTeam(); if (!t) return h("div");
+    var isOwner = t.role === "owner";
+    var usingTeam = ws.type === "team" && ws.teamId === t.id;
+    var out = [];
+
+    var head = [h("div", { class: "team-head" }, [h("h2", { text: t.name }), badge(t.role)])];
+    if (teams.length > 1) {
+      var sel = h("select", { "aria-label": "Equipe", onchange: function (e) { viewTeamId = e.target.value; watchTeam(); renderTeam(); } },
+        teams.map(function (x) { return h("option", { value: x.id, text: x.name, selected: x.id === t.id }); }));
+      head.push(field("Equipe", sel));
+    }
+    head.push(h("p", { class: "hint", text: "Escolha quais dados aparecem em Produtos, Estoque e na calculadora." }));
+    head.push(h("div", { class: "seg", role: "group", "aria-label": "Dados em uso" }, [
+      h("button", { type: "button", "aria-pressed": usingTeam ? "true" : "false", text: "Dados da equipe",
+        onclick: function () { if (!usingTeam) switchWorkspace("team", t.id); } }),
+      h("button", { type: "button", "aria-pressed": usingTeam ? "false" : "true", text: "Meus dados pessoais",
+        onclick: function () { if (usingTeam) switchWorkspace("personal"); } })
+    ]));
+    out.push(h("div", { class: "team-card" }, head));
+
+    out.push(h("div", { class: "team-card" }, [
+      h("h2", { text: "Membros" }),
+      h("div", { class: "mlist" }, teamMembers.length
+        ? teamMembers.map(function (m) { return memberRow(t, m, isOwner); })
+        : [h("p", { class: "hint", text: "Carregando membros…" })])
+    ]));
+
+    if (isOwner) {
+      var active = teamInvites.filter(function (i) { return i.active !== false && (i.expiresAt || 0) > Date.now(); });
+      out.push(h("div", { class: "team-card" }, [
+        h("h2", { text: "Convidar pessoas" }),
+        h("p", { class: "hint", text: "O link vale por 7 dias e pode ser usado por várias pessoas. Quem entrar vê e edita todos os produtos e o estoque da equipe. Revogue o link para impedir novas entradas." }),
+        h("div", {}, [h("button", { type: "button", class: "btn primary", text: "Gerar link de convite", onclick: createInvite })]),
+        h("div", { class: "mlist" }, active.map(function (i) { return inviteRow(t, i); }))
+      ]));
+    } else {
+      var lv = h("button", { type: "button", class: "btn danger small", text: "Sair da equipe" });
+      twoStep(lv, function () { leaveTeam(t); }, "Confirmar saída");
+      out.push(h("div", { class: "team-card" }, [
+        h("h2", { text: "Sair da equipe" }),
+        h("p", { class: "hint", text: "Você volta para os seus dados pessoais. Os dados da equipe continuam com os outros membros." }),
+        h("div", {}, [lv])
+      ]));
+    }
+    return h("div", {}, out);
+  }
+  function renderTeam() {
+    var box = $("#team-body");
+    if (!box || ui.view !== "equipe") return;
+    var a = document.activeElement;
+    if (a && a.tagName === "INPUT" && !a.readOnly && box.contains(a)) return;
+    box.innerHTML = "";
+    if (pendingInvite) {
+      box.appendChild(inviteCard());
+      if (currentUser) loadInviteInfo();
+    }
+    if (!currentUser) { if (!pendingInvite) box.appendChild(signedOutCard()); return; }
+    if (!teams.length) { box.appendChild(createTeamCard()); return; }
+    box.appendChild(teamPanel());
+  }
+
   $("#google-login").addEventListener("click", loginGoogle);
   $("#google-logout").addEventListener("click", logoutGoogle);
 
@@ -1325,8 +1766,13 @@ const googleProvider = new GoogleAuthProvider();
 
   onAuthStateChanged(auth, function (user) {
     updateAuthUI(user);
-    if (user) startCloud(user);
-    else stopCloud();
+    if (user) {
+      ws = readWorkspacePref(user);
+      startCloud(user);
+      watchMyTeams(user);
+      if (pendingInvite) loadInviteInfo();
+    } else stopCloud();
+    renderTeam();
   });
 
   /* ---------- navegação ---------- */
@@ -1343,6 +1789,7 @@ const googleProvider = new GoogleAuthProvider();
     if (v === "produtos") renderProducts();
     if (v === "calculadora") { refreshStockSelects(); updateSaveTargets(); renderSavebox(); }
     if (v === "estoque") renderInventory();
+    if (v === "equipe") renderTeam();
     window.scrollTo(0, 0);
   }
   function openProduct(id) { ui.openId = id; showView("produtos"); }
@@ -1916,8 +2363,10 @@ const googleProvider = new GoogleAuthProvider();
   inventory = lsReadInv(); inventory.forEach(normalizeFilament);
   calc();
   updateHome();
+  pendingInvite = readInviteFromUrl();
+  if (pendingInvite) { try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) {} }
   var start = location.hash.replace("#", "");
-  showView(["calculadora", "produtos", "estoque"].indexOf(start) >= 0 ? start : "inicio");
+  showView(pendingInvite ? "equipe" : (["calculadora", "produtos", "estoque", "equipe"].indexOf(start) >= 0 ? start : "inicio"));
 })();
 </script>
 </body>
