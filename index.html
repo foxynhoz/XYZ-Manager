@@ -428,7 +428,17 @@
   .mbar span { color: var(--total-muted); font-size: 0.9rem; }
   .mbar b { font-family: var(--font-head); font-size: 1.5rem; font-variant-numeric: tabular-nums; }
 
+  .account { margin-top: auto; display: grid; gap: 8px; padding: 0 2px; }
+  .account-user { min-width: 0; padding: 0 8px 2px; }
+  .account-name, .account-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .account-name { font-weight: 600; }
+  .account-email { color: var(--muted); font-size: 0.78rem; }
+  .account-btn { width: 100%; }
+
   @media (max-width: 900px) {
+    .account { margin-top: 0; flex: 0 0 auto; }
+    .account-user { display: none; }
+    .account-btn { width: auto; white-space: nowrap; }
     .layout { grid-template-columns: minmax(0, 1fr); }
     aside.result { position: static; order: -1; }
     .mbar { display: none; }
@@ -496,6 +506,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg>
         <span>Estoque</span>
       </button>
+    </div>
+    <div class="account" id="account-box">
+      <div class="account-user" id="account-user" hidden>
+        <div class="account-name" id="account-name"></div>
+        <div class="account-email" id="account-email"></div>
+      </div>
+      <button type="button" class="btn primary account-btn" id="google-login">Entrar com Google</button>
+      <button type="button" class="btn account-btn" id="google-logout" hidden>Sair</button>
     </div>
   </nav>
 
@@ -741,7 +759,30 @@
 <div class="mbar" aria-hidden="true"><span>Valor bruto</span><b id="m-total">R$ 0,00</b></div>
 <div class="toast" id="toast" role="status"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
+  setPersistence, browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCvmGW-P9BMAiw97KAQ3n-9gds1RXnaScE",
+  authDomain: "xyz-manager.firebaseapp.com",
+  projectId: "xyz-manager",
+  storageBucket: "xyz-manager.firebasestorage.app",
+  messagingSenderId: "746044570582",
+  appId: "1:746044570582:web:23c63581c85cdd4f0fc277"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+const googleProvider = new GoogleAuthProvider();
+
 (function () {
   "use strict";
 
@@ -1204,21 +1245,89 @@
     setStatus(storageLabel());
     rerender();
   }
-  function initCloud() {
-    if (!window.claude || !window.claude.use) return;
-    Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function (r) {
-      if (!r[0] || !r[1]) return null;
-      return r[1].id().then(function (id) { return id ? { db: r[0], id: id } : null; });
-    }).then(function (c) {
-      if (!c) return;
-      store.col = c.db.collection("data/users/" + c.id);
-      store.mode = "cloud";
-      store.col.onSnapshot(onCloud, function () {
-        store.mode = "local"; lsWrite(); lsWriteInv();
-        setStatus("Sem acesso à conta. Seus produtos ficam salvos neste navegador.");
-      });
-    }).catch(function () {});
+  var cloudUnsub = null;
+  var currentUser = null;
+
+  function makeCloudStore(uid) {
+    var userProducts = collection(db, "users", uid, "products");
+    return {
+      mode: "cloud",
+      col: {
+        doc: function (id) {
+          var ref = doc(db, "users", uid, "products", id);
+          return {
+            set: function (data) { return setDoc(ref, data); },
+            delete: function () { return deleteDoc(ref); }
+          };
+        },
+        onSnapshot: function (cb, err) { return onSnapshot(userProducts, cb, err); }
+      }
+    };
   }
+
+  function updateAuthUI(user) {
+    var login = $("#google-login"), logout = $("#google-logout"), box = $("#account-user");
+    if (user) {
+      box.hidden = false;
+      $("#account-name").textContent = user.displayName || "Conta Google";
+      $("#account-email").textContent = user.email || "";
+      login.hidden = true; logout.hidden = false;
+    } else {
+      box.hidden = true; login.hidden = false; logout.hidden = true;
+    }
+  }
+
+  function stopCloud() {
+    if (cloudUnsub) { cloudUnsub(); cloudUnsub = null; }
+    currentUser = null;
+    store.mode = "local"; store.col = null; synced = false;
+    products = lsRead().sort(byUpdated);
+    inventory = lsReadInv(); inventory.forEach(normalizeFilament);
+    rerender();
+    setStatus(storageLabel());
+  }
+
+  function startCloud(user) {
+    if (cloudUnsub) cloudUnsub();
+    currentUser = user;
+    store = makeCloudStore(user.uid);
+    synced = false;
+    setStatus("Carregando seus dados…");
+    cloudUnsub = store.col.onSnapshot(onCloud, function (err) {
+      console.error("Firestore:", err);
+      store.mode = "local";
+      store.col = null;
+      lsWrite(); lsWriteInv();
+      setStatus("Sem acesso à conta. Seus dados ficaram salvos neste navegador.");
+    });
+  }
+
+  async function loginGoogle() {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      console.error("Login Google:", err);
+      toast("Não foi possível entrar com Google.");
+    }
+  }
+
+  async function logoutGoogle() {
+    try { await signOut(auth); }
+    catch (err) { console.error("Logout:", err); toast("Não foi possível sair."); }
+  }
+
+  $("#google-login").addEventListener("click", loginGoogle);
+  $("#google-logout").addEventListener("click", logoutGoogle);
+
+  setPersistence(auth, browserLocalPersistence).catch(function (err) {
+    console.warn("Não foi possível configurar persistência da sessão:", err);
+  });
+
+  onAuthStateChanged(auth, function (user) {
+    updateAuthUI(user);
+    if (user) startCloud(user);
+    else stopCloud();
+  });
 
   /* ---------- navegação ---------- */
   var ui = { view: "inicio", openId: null, edit: null, addTo: null, invEdit: null };
@@ -1809,7 +1918,6 @@
   updateHome();
   var start = location.hash.replace("#", "");
   showView(["calculadora", "produtos", "estoque"].indexOf(start) >= 0 ? start : "inicio");
-  initCloud();
 })();
 </script>
 </body>
