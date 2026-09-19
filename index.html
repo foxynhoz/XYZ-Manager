@@ -3,7 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Impressão 3D: custos e produtos</title>
+<title>XYZ Manager — Impressão 3D</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0b7f77">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="XYZ Manager">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -2401,6 +2407,15 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   var start = location.hash.replace("#", "");
   showView(pendingInvite ? "equipe" : (["calculadora", "produtos", "estoque", "equipe"].indexOf(start) >= 0 ? start : "inicio"));
 })();
+
+  /* ---------- PWA ---------- */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./service-worker.js", { scope: "./" })
+        .catch(function (err) { console.warn("Service Worker não registrado:", err); });
+    });
+  }
+
 </script>
 </body>
 </html>
