@@ -477,6 +477,9 @@
   .account-name { font-weight: 600; }
   .account-email { color: var(--muted); font-size: 0.78rem; }
   .account-btn { width: 100%; }
+  .account-actions { display: flex; gap: 8px; }
+  .account-actions .account-btn { width: auto; white-space: nowrap; padding-inline: 10px; }
+  .account-actions #google-switch { flex: 1 1 auto; }
 
   @media (max-width: 900px) {
     .nav-team { margin-top: 0; }
@@ -563,7 +566,10 @@
         <div class="account-email" id="account-email"></div>
       </div>
       <button type="button" class="btn primary account-btn" id="google-login">Entrar com Google</button>
-      <button type="button" class="btn account-btn" id="google-logout" hidden>Sair</button>
+      <div class="account-actions" id="account-actions" hidden>
+        <button type="button" class="btn account-btn" id="google-switch">Trocar de conta</button>
+        <button type="button" class="btn account-btn" id="google-logout">Sair</button>
+      </div>
     </div>
   </nav>
 
@@ -843,6 +849,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
 
 (function () {
   "use strict";
@@ -1337,7 +1344,7 @@ const googleProvider = new GoogleAuthProvider();
   }
 
   function updateAuthUI(user) {
-    var login = $("#google-login"), logout = $("#google-logout"), box = $("#account-user");
+    var login = $("#google-login"), logout = $("#account-actions"), box = $("#account-user");
     if (user) {
       box.hidden = false;
       $("#account-name").textContent = user.displayName || "Conta Google";
@@ -1386,12 +1393,26 @@ const googleProvider = new GoogleAuthProvider();
     });
   }
 
+  function popupCancelled(err) {
+    return err && (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request");
+  }
   async function loginGoogle() {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
+      if (popupCancelled(err)) return;
       console.error("Login Google:", err);
       toast("Não foi possível entrar com Google.");
+    }
+  }
+  /* abre o seletor de contas do Google; escolher outra conta substitui a atual sem passar por "Sair" */
+  async function switchAccount() {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      if (popupCancelled(err)) return;
+      console.error("Trocar de conta:", err);
+      toast("Não foi possível trocar de conta.");
     }
   }
 
@@ -1461,6 +1482,16 @@ const googleProvider = new GoogleAuthProvider();
     dirty = {}; editSeq = {}; saving = {}; again = {}; timers = {}; deleted = {};
     invDirty = false; invSaving = false; invAgain = false;
     ui.openId = null; ui.edit = null; ui.addTo = null; ui.invEdit = null;
+  }
+  function resetForAccountChange() {
+    if (cloudUnsub) { cloudUnsub(); cloudUnsub = null; }
+    if (teamsUnsub) { teamsUnsub(); teamsUnsub = null; }
+    teamUnsubs.forEach(function (u) { u(); }); teamUnsubs = []; watchedTeam = null;
+    teams = []; teamMembers = []; teamInvites = []; viewTeamId = null; lostHandled = {};
+    ws = { type: "personal", teamId: null };
+    resetData();
+    synced = false;
+    if (pendingInvite) { pendingInvite.info = null; pendingInvite.error = ""; pendingInvite.loading = false; }
   }
   function switchWorkspace(type, teamId) {
     if (!currentUser) return;
@@ -1758,6 +1789,7 @@ const googleProvider = new GoogleAuthProvider();
   }
 
   $("#google-login").addEventListener("click", loginGoogle);
+  $("#google-switch").addEventListener("click", switchAccount);
   $("#google-logout").addEventListener("click", logoutGoogle);
 
   setPersistence(auth, browserLocalPersistence).catch(function (err) {
@@ -1767,6 +1799,7 @@ const googleProvider = new GoogleAuthProvider();
   onAuthStateChanged(auth, function (user) {
     updateAuthUI(user);
     if (user) {
+      if (currentUser && currentUser.uid !== user.uid) resetForAccountChange();
       ws = readWorkspacePref(user);
       startCloud(user);
       watchMyTeams(user);
