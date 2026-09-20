@@ -1,4 +1,4 @@
-const CACHE_NAME = "xyz-manager-v1";
+const CACHE_NAME = "xyz-manager-v2";
 
 const APP_SHELL = [
   "./",
@@ -30,25 +30,36 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Rede primeiro; se estiver offline, usa o cache
+// Rede primeiro; se estiver offline, usa o cache.
+// Só guarda arquivos do próprio site e os scripts do Firebase (gstatic).
+// As chamadas ao Firestore/Auth (inclusive as conexões longas do onSnapshot)
+// passam direto, sem cache.
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") {
+  const request = event.request;
+  if (request.method !== "GET") {
+    return;
+  }
+
+  const url = new URL(request.url);
+  const mesmoSite = url.origin === self.location.origin;
+  const scriptFirebase = request.destination === "script" && url.hostname === "www.gstatic.com";
+  if (!mesmoSite && !scriptFirebase) {
     return;
   }
 
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then((response) => {
-        const responseClone = response.clone();
-
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
-
+        if (response && response.ok) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
+          });
+        }
         return response;
       })
       .catch(() => {
-        return caches.match(event.request);
+        return caches.match(request);
       })
   );
 });

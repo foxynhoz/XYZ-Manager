@@ -28,6 +28,9 @@
     --c-en: #d99a1f;
     --c-waste: #b5566b;
     --c-pack: #7a5ca8;
+    --axis-x: #e5484d;
+    --axis-y: #30a46c;
+    --axis-z: #3e63dd;
     --total-bg: #12242b;
     --total-ink: #f2f7f8;
     --total-muted: #9db2b9;
@@ -49,6 +52,9 @@
       --c-en: #e8b34a;
       --c-waste: #d9798e;
       --c-pack: #b59be0;
+      --axis-x: #ff6b6f;
+      --axis-y: #3ddc97;
+      --axis-z: #6d8dff;
       --total-bg: #0a1216;
       --total-ink: #e4eef0;
       --total-muted: #8fa3aa;
@@ -68,6 +74,9 @@
     --c-en: #e8b34a;
     --c-waste: #d9798e;
     --c-pack: #b59be0;
+      --axis-x: #ff6b6f;
+      --axis-y: #3ddc97;
+      --axis-z: #6d8dff;
     --total-bg: #0a1216;
     --total-ink: #e4eef0;
     --total-muted: #8fa3aa;
@@ -103,6 +112,20 @@
     font-family: var(--font-head); font-weight: 700; font-size: 1.1rem; letter-spacing: -0.01em;
   }
   .brand svg { flex: none; }
+  .brand-name { letter-spacing: -0.01em; white-space: nowrap; }
+  .ax-x { color: var(--axis-x); }
+  .ax-y { color: var(--axis-y); }
+  .ax-z { color: var(--axis-z); }
+  .gz line { stroke-width: 2.2; stroke-linecap: round; }
+  .gz polygon { stroke-width: 1; stroke-linejoin: round; }
+  .gz-x line, .gz-x polygon { stroke: var(--axis-x); }
+  .gz-y line, .gz-y polygon { stroke: var(--axis-y); }
+  .gz-z line, .gz-z polygon { stroke: var(--axis-z); }
+  .gz-x polygon { fill: var(--axis-x); }
+  .gz-y polygon { fill: var(--axis-y); }
+  .gz-z polygon { fill: var(--axis-z); }
+  .gz-origin { fill: var(--ink); }
+  .row.dirty { box-shadow: inset 3px 0 0 var(--accent); padding-left: 12px; }
   .nav { display: flex; flex-direction: column; gap: 4px; }
   .nav-item {
     position: relative;
@@ -535,12 +558,13 @@
 <div class="shell">
   <nav class="side" aria-label="Principal">
     <div class="brand">
-      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-        <rect x="3" y="4" width="20" height="5" rx="2" fill="var(--c-fil)"/>
-        <rect x="3" y="10.5" width="20" height="5" rx="2" fill="var(--c-mat)"/>
-        <rect x="3" y="17" width="20" height="5" rx="2" fill="var(--c-en)"/>
+      <svg class="gizmo" width="30" height="30" viewBox="0 0 26 26" aria-hidden="true">
+        <g class="gz gz-x"><line x1="13" y1="15" x2="19.6" y2="18.6"/><polygon points="24,21 18.17,21.24 21.05,15.97"/></g>
+        <g class="gz gz-z"><line x1="13" y1="15" x2="6.4" y2="18.6"/><polygon points="2,21 4.95,15.97 7.83,21.24"/></g>
+        <g class="gz gz-y"><line x1="13" y1="15" x2="13" y2="8"/><polygon points="13,3 16,8 10,8"/></g>
+        <circle cx="13" cy="15" r="1.9" class="gz-origin"/>
       </svg>
-      <span>Impressão 3D</span>
+      <span class="brand-name"><span class="ax-x">X</span><span class="ax-y">Y</span><span class="ax-z">Z</span> Manager</span>
     </div>
     <div class="nav">
       <button type="button" class="nav-item" data-go="inicio">
@@ -742,7 +766,7 @@
 
       <section class="block">
         <h2>Filamentos</h2>
-        <p class="hint">A barra mostra o estoque atual em relação ao peso do rolo (100%). Use o lápis para editar cor, tipo, preço, peso e estoque.</p>
+        <p class="hint">A barra mostra o estoque atual em relação ao peso do rolo (100%). Use o lápis para editar cor, tipo, preço, peso e estoque. As alterações só são gravadas ao clicar em Salvar.</p>
         <div class="flist" id="inv-fil"></div>
         <div class="empty-state" id="inv-fil-empty">Nenhum filamento cadastrado.</div>
         <button type="button" class="btn add" id="inv-add-fil">Cadastrar filamento</button>
@@ -750,7 +774,7 @@
 
       <section class="block">
         <h2>Materiais</h2>
-        <p class="hint">Ímãs, parafusos, tinta, cola, caixas, plástico bolha e o que mais você compra. O valor é por unidade da medida que você escolher (un, m, ml).</p>
+        <p class="hint">Ímãs, parafusos, tinta, cola, caixas, plástico bolha e o que mais você compra. O valor é por unidade da medida que você escolher (un, m, ml). As alterações só são gravadas ao clicar em Salvar.</p>
         <div id="inv-mat"></div>
         <div class="empty-state" id="inv-mat-empty">Nenhum material cadastrado.</div>
         <button type="button" class="btn add" id="inv-add-mat">Cadastrar material</button>
@@ -1371,6 +1395,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     store.mode = "local"; store.col = null; synced = false;
     products = lsRead().sort(byUpdated);
     inventory = lsReadInv(); inventory.forEach(normalizeFilament);
+    invDrafts = {};
     rerender();
     setStatus(storageLabel());
   }
@@ -1486,7 +1511,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     clearTimeout(invTimer);
     products = []; inventory = [];
     dirty = {}; editSeq = {}; saving = {}; again = {}; timers = {}; deleted = {};
-    invDirty = false; invSaving = false; invAgain = false;
+    invDirty = false; invSaving = false; invAgain = false; invDrafts = {};
     ui.openId = null; ui.edit = null; ui.addTo = null; ui.invEdit = null;
   }
   function resetForAccountChange() {
@@ -2086,49 +2111,80 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
 
   /* ---------- tela de estoque ---------- */
   function kgPrice(it) { return it.weight > 0 ? (it.price / it.weight) * 1000 : 0; }
-  function invRow(it) {
-    var id = it.id, isF = it.type === "filamento";
-    function upd(fn, after) {
-      var x = invById(id); if (!x) return;
-      fn(x); touchInv(); if (after) after(x);
+
+  /* Alterações ficam em rascunho até o clique em "Salvar": só então há gravação no Firebase */
+  var invDrafts = {};   // id -> { data, base, isNew }
+  function invSrc(id) { var d = invDrafts[id]; return d ? d.data : invById(id); }
+  function startDraft(item, isNew) { invDrafts[item.id] = { data: clone(item), base: clone(item), isNew: !!isNew }; }
+  function draftDirty(d) { return d.isNew || JSON.stringify(d.data) !== JSON.stringify(d.base); }
+  function cancelDraft(id) { delete invDrafts[id]; renderInventory(); }
+  function saveDraft(id) {
+    var d = invDrafts[id]; if (!d) return;
+    var item;
+    if (d.isNew) {
+      item = clone(d.data); inventory.push(item);
+    } else {
+      item = invById(id);
+      if (!item) {
+        delete invDrafts[id]; renderInventory();
+        toast("Este item foi removido por outra pessoa. Suas alterações não foram salvas.");
+        return;
+      }
+      // aplica só o que você mudou; o estoque entra como diferença para não apagar baixas feitas por outras pessoas
+      Object.keys(d.data).forEach(function (k) {
+        if (k === "stock") item.stock = r3((item.stock || 0) + ((d.data.stock || 0) - (d.base.stock || 0)));
+        else if (d.data[k] !== d.base[k]) item[k] = d.data[k];
+      });
     }
-    var kg = isF ? h("output", { text: brl.format(kgPrice(it)) + "/kg" }) : null;
+    if (item.type === "filamento") item.name = displayName(item);
+    delete invDrafts[id];
+    commitInv(); renderInventory(); updateHome();
+    toast(item.type === "filamento" ? "Filamento salvo." : "Material salvo.");
+  }
+  function removeInvItem(id) {
+    inventory = inventory.filter(function (x) { return x.id !== id; });
+    delete invDrafts[id];
+    commitInv(); renderInventory(); updateHome();
+    toast("Item removido do estoque. Produtos já salvos não mudam.");
+  }
+
+  function matItem(id) {
+    var it = invSrc(id), isNew = !!(invDrafts[id] && invDrafts[id].isNew);
+    var saveBtn, cancelBtn, rowEl, stockField;
+    function draft() { if (!invDrafts[id]) startDraft(invById(id), false); return invDrafts[id]; }
+    function sync() {
+      var d = invDrafts[id], dirty = !!d && draftDirty(d);
+      saveBtn.disabled = !dirty;
+      cancelBtn.hidden = !(d && !d.isNew && dirty);
+      rowEl.classList.toggle("dirty", dirty);
+    }
+    function upd(fn) { fn(draft().data); sync(); }
     var stockIn = h("input", { type: "number", inputmode: "decimal", step: "any", value: it.stock,
       oninput: function (e) {
         var v = parseFloat(e.target.value);
-        upd(function (x) { x.stock = isFinite(v) ? v : 0; }, function (x) { stockField.classList.toggle("neg", x.stock < 0); });
+        upd(function (x) { x.stock = isFinite(v) ? v : 0; });
+        stockField.classList.toggle("neg", draft().data.stock < 0);
       } });
-    var stockField = field(isF ? "Estoque atual (g)" : "Estoque atual", stockIn, it.stock < 0 ? "neg" : "");
-    var nameF = field(isF ? "Nome ou cor" : "Item", h("input", { type: "text", value: it.name || "", placeholder: isF ? "PLA preto" : "Ímã 6x3 mm",
+    stockField = field("Estoque atual", stockIn, it.stock < 0 ? "neg" : "");
+    var nameF = field("Item", h("input", { type: "text", value: it.name || "", placeholder: "Ímã 6x3 mm",
       oninput: function (e) { upd(function (x) { x.name = e.target.value; }); } }), "f-name");
-    var priceF = field(isF ? "Preço do rolo (R$)" : "Valor unitário (R$)", h("input", { type: "number", inputmode: "decimal", min: "0", step: "any", placeholder: "0,00", value: it.price > 0 ? it.price : "",
-      oninput: function (e) { upd(function (x) { x.price = n(e.target.value); }, function (x) { if (kg) kg.textContent = brl.format(kgPrice(x)) + "/kg"; }); } }));
-    var cells = [nameF, priceF];
-    if (isF) {
-      cells.push(field("Peso do rolo (g)", h("input", { type: "number", inputmode: "decimal", min: "0", step: "any", value: it.weight || "",
-        oninput: function (e) { upd(function (x) { x.weight = n(e.target.value); }, function (x) { kg.textContent = brl.format(kgPrice(x)) + "/kg"; }); } })));
-      cells.push(stockField);
-    } else {
-      cells.push(stockField);
-      cells.push(field("Unidade", h("input", { type: "text", maxlength: "10", value: it.unit || "", placeholder: "un",
-        oninput: function (e) { upd(function (x) { x.unit = e.target.value.trim(); }); } })));
-    }
+    var priceF = field("Valor unitário (R$)", h("input", { type: "number", inputmode: "decimal", min: "0", step: "any", placeholder: "0,00", value: it.price > 0 ? it.price : "",
+      oninput: function (e) { upd(function (x) { x.price = n(e.target.value); }); } }));
+    var unitF = field("Unidade", h("input", { type: "text", maxlength: "10", value: it.unit || "", placeholder: "un",
+      oninput: function (e) { upd(function (x) { x.unit = e.target.value.trim(); }); } }));
+
+    saveBtn = h("button", { type: "button", class: "btn primary small", text: "Salvar", onclick: function () { saveDraft(id); } });
+    cancelBtn = h("button", { type: "button", class: "btn small", text: "Cancelar", onclick: function () { cancelDraft(id); } });
     var del = h("button", { type: "button", class: "btn danger small", text: "Remover" });
-    twoStep(del, function () {
-      inventory = inventory.filter(function (x) { return x.id !== id; });
-      commitInv(); renderInventory(); updateHome();
-      toast("Item removido do estoque. Produtos já salvos não mudam.");
-    });
-    var actions = [kg];
-    if (isF) actions.push(h("button", { type: "button", class: "btn small", text: "+ 1 rolo", onclick: function () {
-      upd(function (x) { x.stock = r3((x.stock || 0) + (x.weight || 0)); }, function (x) {
-        stockIn.value = x.stock; stockField.classList.toggle("neg", x.stock < 0);
-      });
-    } }));
-    actions.push(del);
-    cells.push(h("div", { class: "row-end actions" }, actions));
-    return h("div", { class: "row " + (isF ? "inv-fil" : "inv-mat") }, cells);
+    if (isNew) del.addEventListener("click", function () { cancelDraft(id); });
+    else twoStep(del, function () { removeInvItem(id); });
+
+    rowEl = h("div", { class: "row inv-mat" }, [nameF, priceF, stockField, unitF,
+      h("div", { class: "row-end actions" }, [saveBtn, cancelBtn, del])]);
+    sync();
+    return rowEl;
   }
+
   var ICON_PENCIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
   var ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg>';
   function armDelete(btn, action) {
@@ -2140,17 +2196,17 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       } else { clearTimeout(t); action(); }
     });
   }
-  function fitem(it) {
-    var id = it.id;
+  function fitem(id) {
+    var it = invSrc(id);
     var sw = h("span", { class: "fswatch" });
     var title = h("span", { class: "frow-title" });
     var meta = h("span", { class: "frow-meta" });
     var label = h("span", { class: "meter-label" });
     var fill = document.createElement("i");
     var meter = h("div", { class: "meter", role: "img" }, [fill]);
-    var nameIn, stockIn;
+    var nameIn, stockIn, saveBtn;
     function refresh() {
-      var x = invById(id); if (!x) return;
+      var x = invSrc(id); if (!x) return;
       var col = x.color || "#9aa5aa", w = x.weight || 0, st = x.stock || 0;
       sw.style.background = col; fill.style.background = col;
       title.textContent = displayName(x) || "Filamento sem nome";
@@ -2160,23 +2216,25 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       fill.style.width = (w > 0 ? Math.max(0, Math.min(1, st / w)) * 100 : 0) + "%";
       meter.setAttribute("aria-label", "Estoque: " + label.textContent);
       if (nameIn) nameIn.placeholder = colorNameFromHex(col) || "Ex.: Branco";
+      var d = invDrafts[id]; if (saveBtn && d) saveBtn.disabled = !draftDirty(d);
     }
-    function upd(fn) {
-      var x = invById(id); if (!x) return;
-      fn(x); x.name = displayName(x); touchInv(); refresh();
-    }
-    var editing = ui.invEdit === id;
+    function draft() { if (!invDrafts[id]) startDraft(invById(id), false); return invDrafts[id]; }
+    function upd(fn) { var d = draft(); fn(d.data); d.data.name = displayName(d.data); refresh(); }
+
+    var editing = !!invDrafts[id];
     var pencil = h("button", { type: "button", class: "icon-btn" + (editing ? " on" : ""), "aria-label": "Editar filamento", title: "Editar", onclick: function () {
-      ui.invEdit = ui.invEdit === id ? null : id; renderInventory();
+      var d = invDrafts[id];
+      if (d) {
+        if (draftDirty(d)) { toast("Clique em Salvar ou Cancelar para fechar a edição."); return; }
+        cancelDraft(id);
+      } else { startDraft(invById(id), false); renderInventory(); }
     } });
     pencil.innerHTML = ICON_PENCIL;
     var trash = h("button", { type: "button", class: "icon-btn", "aria-label": "Excluir filamento", title: "Excluir" });
     trash.innerHTML = ICON_TRASH;
     armDelete(trash, function () {
-      inventory = inventory.filter(function (x) { return x.id !== id; });
-      if (ui.invEdit === id) ui.invEdit = null;
-      commitInv(); renderInventory(); updateHome();
-      toast("Item removido do estoque. Produtos já salvos não mudam.");
+      var d = invDrafts[id];
+      if (d && d.isNew) cancelDraft(id); else removeInvItem(id);
     });
 
     var row = h("div", { class: "frow" }, [
@@ -2190,6 +2248,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       oninput: function (e) { upd(function (x) { x.colorName = e.target.value.trim(); }); } });
     stockIn = h("input", { type: "number", inputmode: "decimal", step: "any", value: it.stock,
       oninput: function (e) { var v = parseFloat(e.target.value); upd(function (x) { x.stock = isFinite(v) ? v : 0; }); } });
+    saveBtn = h("button", { type: "button", class: "btn primary small", text: "Salvar", onclick: function () { saveDraft(id); } });
     var edit = h("div", { class: "fedit", hidden: !editing }, [
       field("Cor", h("input", { type: "color", value: it.color || "#9aa5aa",
         oninput: function (e) { upd(function (x) { x.color = e.target.value; }); } })),
@@ -2202,9 +2261,10 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
         oninput: function (e) { upd(function (x) { x.weight = n(e.target.value); }); } })),
       field("Estoque atual (g)", stockIn),
       h("button", { type: "button", class: "btn small", text: "+ 1 rolo", onclick: function () {
-        upd(function (x) { x.stock = r3((x.stock || 0) + (x.weight || 0)); }); stockIn.value = invById(id).stock;
+        upd(function (x) { x.stock = r3((x.stock || 0) + (x.weight || 0)); }); stockIn.value = invDrafts[id].data.stock;
       } }),
-      h("button", { type: "button", class: "btn primary small", text: "Concluir", onclick: function () { ui.invEdit = null; renderInventory(); } })
+      saveBtn,
+      h("button", { type: "button", class: "btn small", text: "Cancelar", onclick: function () { cancelDraft(id); } })
     ]);
     refresh();
     return h("div", { class: "fitem" }, [row, edit]);
@@ -2213,11 +2273,16 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   function renderInventory() {
     var fb = $("#inv-fil"), mb = $("#inv-mat");
     fb.innerHTML = ""; mb.innerHTML = "";
-    var byName = function (a, b) { return (a.name || "").localeCompare(b.name || "", "pt-BR"); };
-    var fils = inventory.filter(function (i) { return i.type === "filamento"; });
-    var mats = inventory.filter(function (i) { return i.type !== "filamento"; });
-    fils.forEach(function (i) { fb.appendChild(fitem(i)); });
-    mats.forEach(function (i) { mb.appendChild(invRow(i)); });
+    // descarta rascunhos de itens que foram removidos por outra pessoa
+    Object.keys(invDrafts).forEach(function (id) { if (!invDrafts[id].isNew && !invById(id)) delete invDrafts[id]; });
+    var fils = inventory.filter(function (i) { return i.type === "filamento"; }).map(function (i) { return i.id; });
+    var mats = inventory.filter(function (i) { return i.type !== "filamento"; }).map(function (i) { return i.id; });
+    Object.keys(invDrafts).forEach(function (id) {
+      var d = invDrafts[id]; if (!d.isNew) return;
+      (d.data.type === "filamento" ? fils : mats).push(id);
+    });
+    fils.forEach(function (id) { fb.appendChild(fitem(id)); });
+    mats.forEach(function (id) { mb.appendChild(matItem(id)); });
     $("#inv-fil-empty").hidden = fils.length > 0;
     $("#inv-mat-empty").hidden = mats.length > 0;
     setStatus(storageLabel());
@@ -2226,11 +2291,12 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     var it;
     if (type === "filamento") {
       it = { id: uid(), type: type, tipo: "PLA", color: "#9aa5aa", colorName: "", name: "", price: 0, weight: 1000, stock: 1000 };
-      it.name = displayName(it); ui.invEdit = it.id;
+      it.name = displayName(it);
     } else {
       it = { id: uid(), type: type, name: "", price: 0, stock: 0, unit: "un" };
     }
-    inventory.push(it); touchInv(); renderInventory(); updateHome();
+    startDraft(it, true);   // só entra no estoque (e no Firebase) quando você clicar em Salvar
+    renderInventory();
     if (type === "filamento") {
       var last = $$("#inv-fil .fitem").pop(), t = last && last.querySelector("input[list]"); if (t) t.focus();
     } else {
