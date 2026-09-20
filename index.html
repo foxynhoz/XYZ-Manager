@@ -355,6 +355,20 @@
   }
   .title-input:hover { border-color: var(--line); }
   .detail-head .actions { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .tag-card { display: grid; gap: 10px; }
+  .tag-list { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag {
+    font: inherit; font-size: 0.86rem; font-weight: 600; color: var(--muted); background: transparent;
+    border: 1px solid var(--line); border-radius: 99px; padding: 6px 11px; cursor: pointer;
+  }
+  .tag[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .tag-form { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
+  .tag-form .f { flex: 1 1 180px; }
+  .tag-badge {
+    display: inline-flex; align-items: center; width: fit-content; border-radius: 99px; padding: 2px 8px;
+    background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent); font-size: 0.76rem; font-weight: 600;
+  }
+  .prow-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 3px; }
 
   .subcard {
     background: var(--surface); border: 1px solid var(--line);
@@ -791,7 +805,7 @@
       <header class="top">
         <div>
           <h1>Estoque</h1>
-          <p>Cadastre filamentos e materiais com preço e quantidade. Eles aparecem nos dropdowns da calculadora e da embalagem, e o que for usado é baixado do estoque ao salvar a peça.</p>
+          <p>Cadastre filamentos e materiais com preço e quantidade. Eles aparecem nos dropdowns da calculadora e da embalagem; a baixa acontece quando o produto é marcado como Impresso.</p>
         </div>
       </header>
 
@@ -853,6 +867,17 @@
 
         <div class="layout">
           <div>
+            <section class="block">
+              <h2>Status e tags</h2>
+              <p class="hint">Marque <b>Impresso</b> quando o produto for produzido. Só então o uso das peças é baixado do estoque.</p>
+              <div class="card tag-card">
+                <div class="tag-list" id="d-tags" aria-label="Tags do produto"></div>
+                <div class="tag-form">
+                  <label class="f"><span>Nova tag</span><input type="text" id="d-new-tag" maxlength="30" placeholder="Ex.: Entregue"></label>
+                  <button type="button" class="btn small" id="d-add-tag">Adicionar tag</button>
+                </div>
+              </div>
+            </section>
             <section class="block">
               <h2>Peças impressas</h2>
               <p class="hint">Cada peça guarda os gastos de filamento, materiais, energia e o tempo de impressão calculados na calculadora.</p>
@@ -1232,6 +1257,19 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     (d.materials || []).forEach(function (m) { if (m.stockId && m.qty > 0) u[m.stockId] = r3((u[m.stockId] || 0) + m.qty * q); });
     return u;
   }
+  function productUsage(p) {
+    var total = {};
+    (p.subs || []).forEach(function (s) {
+      Object.keys(s.usage || usageOf(s)).forEach(function (id) {
+        total[id] = r3((total[id] || 0) + (s.usage || usageOf(s))[id]);
+      });
+    });
+    return total;
+  }
+  function hasTag(p, tag) { return (p.tags || []).some(function (t) { return t.toLowerCase() === tag.toLowerCase(); }); }
+  function isPrinted(p) { return hasTag(p, "Impresso"); }
+  /* Produtos antigos já tinham o estoque baixado antes das tags existirem. */
+  function stockWasDeducted(p) { return p.stockDeducted !== false; }
   function applyUsage(oldU, newU) {
     var keys = {}, changed = false;
     Object.keys(oldU || {}).concat(Object.keys(newU || {})).forEach(function (k) { keys[k] = 1; });
@@ -1349,7 +1387,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     } else { lsWrite(); setStatus(storageLabel()); }
   }
   function newProduct(name) {
-    var p = { id: uid(), name: name, subs: [], packaging: [], charged: null, createdAt: Date.now(), updatedAt: Date.now() };
+    var p = { id: uid(), name: name, tags: [], stockDeducted: false, subs: [], packaging: [], charged: null, createdAt: Date.now(), updatedAt: Date.now() };
     products.unshift(p);
     return p;
   }
@@ -1977,7 +2015,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       var i = p ? p.subs.map(function (x) { return x.id; }).indexOf(ui.edit.sid) : -1;
       if (i < 0) { note.textContent = "Essa peça não existe mais."; return; }
       d.usage = usageOf(d);
-      var ch1 = applyUsage(p.subs[i].usage || {}, d.usage);
+      var ch1 = isPrinted(p) && stockWasDeducted(p) ? applyUsage(p.subs[i].usage || {}, d.usage) : false;
       d.id = ui.edit.sid; p.subs[i] = d; commit(p.id);
       ui.edit = null; clearCalc(); openProduct(p.id); toast("Alterações salvas." + (ch1 ? " Estoque atualizado." : ""));
       return;
@@ -1993,7 +2031,8 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     } else { prod = byId(target); if (!prod) { note.textContent = "Esse produto não existe mais."; return; } }
 
     d.id = uid(); d.usage = usageOf(d);
-    var ch2 = applyUsage({}, d.usage);
+    var ch2 = isPrinted(prod) ? applyUsage({}, d.usage) : false;
+    if (isPrinted(prod)) prod.stockDeducted = true;
     prod.subs.push(d); commit(prod.id);
     ui.addTo = null; $("#new-prod-name").value = ""; clearCalc();
     openProduct(prod.id); toast("Peça salva em " + (prod.name || "produto") + "." + (ch2 ? " Estoque atualizado." : ""));
@@ -2036,11 +2075,13 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       var pieces = t.pieces + (t.pieces === 1 ? " peça" : " peças");
       var meta = [pieces];
       if (t.hours > 0) meta.push(fmtTime(t.hours) + " de impressão");
+      var tags = p.tags || [];
       box.appendChild(h("button", { type: "button", class: "prow", onclick: function () { openProduct(p.id); } }, [
         listThumb(p),
         h("span", { class: "prow-main" }, [
           h("span", { class: "prow-name", text: p.name || "Produto sem nome" }),
-          h("span", { class: "prow-meta", text: meta.join(", ") })
+          h("span", { class: "prow-meta", text: meta.join(", ") }),
+          tags.length ? h("span", { class: "prow-tags" }, tags.map(function (tag) { return h("span", { class: "tag-badge", text: tag }); })) : null
         ]),
         h("span", { class: "prow-value" }, [
           h("b", { text: brl.format(t.total) }),
@@ -2053,7 +2094,45 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   function renderDetail(p) {
     var nm = $("#d-name"); if (document.activeElement !== nm) nm.value = p.name || "";
     var ch = $("#d-charged"); if (document.activeElement !== ch) ch.value = p.charged > 0 ? p.charged : "";
-    renderThumb(p); renderSubs(p); renderPack(p); renderTotals(p);
+    renderThumb(p); renderTags(p); renderSubs(p); renderPack(p); renderTotals(p);
+  }
+
+  function renderTags(p) {
+    var box = $("#d-tags"); box.innerHTML = "";
+    var tags = ["Impresso", "Pago"].concat((p.tags || []).filter(function (tag) { return tag !== "Impresso" && tag !== "Pago"; }));
+    tags.forEach(function (tag) {
+      box.appendChild(h("button", { type: "button", class: "tag", text: tag, "aria-pressed": hasTag(p, tag) ? "true" : "false", onclick: function () { toggleTag(p.id, tag); } }));
+    });
+  }
+  function toggleTag(pid, tag) {
+    var p = byId(pid); if (!p) return;
+    var wasPrinted = isPrinted(p), tags = p.tags || [];
+    if (hasTag(p, tag)) tags = tags.filter(function (t) { return t.toLowerCase() !== tag.toLowerCase(); });
+    else tags.push(tag);
+    p.tags = tags;
+    var nowPrinted = isPrinted(p), changed = false;
+    if (tag.toLowerCase() === "impresso" && wasPrinted !== nowPrinted) {
+      var usage = productUsage(p);
+      if (nowPrinted && !stockWasDeducted(p)) changed = applyUsage({}, usage);
+      if (!nowPrinted && stockWasDeducted(p)) changed = applyUsage(usage, {});
+      (p.packaging || []).forEach(function (item) {
+        if (!item.stockId || !invById(item.stockId)) return;
+        var amount = nowPrinted ? n(item.qty) : n(item.deducted || item.qty);
+        if (amount && adjustStock(item.stockId, nowPrinted ? amount : -amount)) changed = true;
+        item.deducted = nowPrinted ? n(item.qty) : 0;
+      });
+      if (changed) commitInv();
+      p.stockDeducted = nowPrinted;
+    }
+    commit(p.id); renderProducts();
+    toast(nowPrinted && tag.toLowerCase() === "impresso" ? "Produto marcado como impresso. Estoque atualizado." : changed ? "Tag removida. Estoque devolvido." : "Tag atualizada.");
+  }
+  function addTag() {
+    var p = cur(), input = $("#d-new-tag"); if (!p || !input) return;
+    var tag = input.value.trim().replace(/\s+/g, " ");
+    if (!tag) return;
+    if (hasTag(p, tag)) { toast("Essa tag já está neste produto."); return; }
+    p.tags = (p.tags || []).concat([tag]); input.value = ""; commit(p.id); renderProducts();
   }
 
   function subCard(p, s) {
@@ -2069,7 +2148,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     var baixa = [];
     (s.filaments || []).forEach(function (f) { if (f.stockId && f.grams > 0) baixa.push((f.name || "Filamento") + " " + fmtG(f.grams * c.qty)); });
     (s.materials || []).forEach(function (m) { if (m.stockId && m.qty > 0) baixa.push((m.name || "item") + " " + nf1.format(m.qty * c.qty)); });
-    if (baixa.length) facts.push("Baixado do estoque: " + baixa.join("; "));
+    if (baixa.length && isPrinted(p) && stockWasDeducted(p)) facts.push("Baixado do estoque: " + baixa.join("; "));
     if (c.energy > 0) facts.push("Energia por unidade: " + brl.format(c.energy) + " (" + printerLabel(s.printer) + ", " + s.power + " W)");
 
     var del = h("button", { type: "button", class: "btn danger small", text: "Remover peça" });
@@ -2125,10 +2204,13 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     sel.addEventListener("input", function () {
       var f = find(); if (!f) return;
       var it = f.it;
-      if (it.stockId && it.deducted) { if (adjustStock(it.stockId, -it.deducted)) touchInv(); }
+      if (it.stockId && it.deducted && isPrinted(f.pp) && stockWasDeducted(f.pp)) { if (adjustStock(it.stockId, -it.deducted)) touchInv(); }
       it.stockId = sel.value || null; it.deducted = 0;
       var si = it.stockId ? invById(it.stockId) : null;
-      if (si) { it.name = si.name; it.unit = si.price; it.deducted = n(it.qty); adjustStock(si.id, it.deducted); touchInv(); }
+      if (si) {
+        it.name = si.name; it.unit = si.price;
+        if (isPrinted(f.pp) && stockWasDeducted(f.pp)) { it.deducted = n(it.qty); adjustStock(si.id, it.deducted); touchInv(); }
+      }
       touch(pid); renderPack(f.pp); renderTotals(f.pp);
     });
     return h("div", { class: "row mat" }, [
@@ -2139,7 +2221,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
         oninput: function (e) {
           upd(function (it) {
             it.qty = n(e.target.value);
-            if (it.stockId && invById(it.stockId)) {
+            if (it.stockId && invById(it.stockId) && isPrinted(f.pp) && stockWasDeducted(f.pp)) {
               var d = it.qty - (it.deducted || 0);
               if (d) { adjustStock(it.stockId, d); it.deducted = it.qty; touchInv(); }
             }
@@ -2437,6 +2519,8 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   $("#d-charged").addEventListener("input", function (e) {
     var p = cur(); if (!p) return; p.charged = n(e.target.value) || null; touch(p.id); renderTotals(p);
   });
+  $("#d-add-tag").addEventListener("click", addTag);
+  $("#d-new-tag").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); addTag(); } });
   $("#d-add-pack").addEventListener("click", function () {
     var p = cur(); if (!p) return;
     p.packaging.push({ id: uid(), name: "", qty: 1, unit: 0 }); touch(p.id);
