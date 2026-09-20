@@ -437,6 +437,37 @@
   .f.neg input { border-color: var(--c-waste); color: var(--c-waste); }
   .row-end.actions { flex-wrap: wrap; }
 
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px;
+    background: rgba(5, 12, 16, 0.66); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    overflow-y: auto;
+  }
+  .modal {
+    width: min(440px, 100%); background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 20px; padding: 30px 26px 24px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+    display: grid; gap: 14px; justify-items: center; text-align: center;
+  }
+  .modal-inviter { display: grid; justify-items: center; gap: 10px; }
+  .avatar.lg { width: 68px; height: 68px; font-size: 1.6rem; box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .modal-by { margin: 0; color: var(--muted); max-width: 30ch; }
+  .modal-by b { color: var(--ink); }
+  .modal-team {
+    margin: 0; font-family: var(--font-head); font-weight: 700; letter-spacing: -0.02em;
+    font-size: clamp(1.9rem, 7vw, 2.5rem); line-height: 1.08; word-break: break-word;
+  }
+  .modal-title { margin: 0; font-family: var(--font-head); font-size: 1.5rem; letter-spacing: -0.01em; }
+  .modal-text { margin: 0; color: var(--muted); max-width: 34ch; }
+  .modal-actions { display: flex; gap: 10px; width: 100%; margin-top: 8px; flex-wrap: wrap; }
+  .modal-actions .btn { flex: 1 1 140px; min-height: 46px; }
+  body.modal-open { overflow: hidden; }
+  @media (prefers-reduced-motion: no-preference) {
+    .modal-backdrop { animation: modal-fade 0.18s ease; }
+    .modal { animation: modal-pop 0.22s ease; }
+  }
+  @keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes modal-pop { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }
+
   .toast {
     position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
     background: var(--total-bg); color: var(--total-ink);
@@ -854,6 +885,9 @@
 </div>
 
 <div class="mbar" aria-hidden="true"><span>Valor bruto</span><b id="m-total">R$ 0,00</b></div>
+<div class="modal-backdrop" id="invite-modal" hidden>
+  <div class="modal" id="invite-dialog" role="dialog" aria-modal="true" aria-label="Convite para entrar em uma equipe"></div>
+</div>
 <div class="toast" id="toast" role="status"></div>
 
 <script type="module">
@@ -1493,6 +1527,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   function clearInvite() {
     pendingInvite = null;
     try { sessionStorage.removeItem(INVITE_KEY); } catch (e) {}
+    renderInviteModal();
   }
 
   function readWorkspacePref(user) {
@@ -1558,6 +1593,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       }
       watchTeam();
       setStatus(storageLabel());
+      renderInviteModal();
       renderTeam();
     }, function (err) { console.error("Equipes:", err); });
   }
@@ -1593,18 +1629,18 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       var d = snap.exists() ? snap.data() : null;
       if (!d || d.active !== true || !(d.expiresAt > Date.now())) {
         inv.error = "Este convite não existe mais ou expirou. Peça um novo link para quem convidou.";
-      } else inv.info = { teamName: d.teamName || "Equipe" };
+      } else inv.info = { teamName: d.teamName || "Equipe", byName: d.createdByName || "", byPhoto: d.createdByPhoto || "" };
     } catch (e) {
       console.error("Convite:", e);
       inv.error = "Não foi possível verificar o convite. Confira se você entrou com a conta Google certa e tente de novo.";
     }
     inv.loading = false;
-    renderTeam();
+    renderInviteModal();
   }
   async function acceptInvite() {
     var inv = pendingInvite, u = currentUser;
     if (!inv || !u || !inv.info || teamBusy) return;
-    teamBusy = true; renderTeam();
+    teamBusy = true; renderInviteModal();
     try {
       var tid = inv.teamId, name = inv.info.teamName;
       if (!teams.some(function (t) { return t.id === tid; })) {
@@ -1613,12 +1649,13 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       }
       clearInvite();
       switchWorkspace("team", tid);
+      showView("equipe");
       toast("Você entrou na equipe " + name + ".");
     } catch (e) {
       console.error("Entrar na equipe:", e);
       toast("Não foi possível entrar na equipe. O convite pode ter expirado ou sido revogado.");
     }
-    teamBusy = false; renderTeam();
+    teamBusy = false; renderInviteModal(); renderTeam();
   }
   async function createTeam(name, copy) {
     var u = currentUser;
@@ -1650,6 +1687,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     try {
       await setDoc(doc(db, "teams", t.id, "invites", randomToken(24)), {
         active: true, createdBy: currentUser.uid, createdAt: Date.now(),
+        createdByName: currentUser.displayName || currentUser.email || "", createdByPhoto: currentUser.photoURL || "",
         expiresAt: Date.now() + 7 * 86400000, teamName: t.name
       });
       toast("Link de convite criado.");
@@ -1690,23 +1728,73 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   }
   function badge(role) { return h("span", { class: "badge", text: role === "owner" ? "Dono" : "Membro" }); }
 
-  function inviteCard() {
-    var inv = pendingInvite, kids = [h("h2", { text: "Convite para uma equipe" })];
+  /* ----- pop-up de convite ----- */
+  var inviteOpen = false, inviteLastFocus = null;
+  function dismissInvite() { clearInvite(); }
+  function declineInvite() { clearInvite(); toast("Convite recusado."); }
+  function inviteModalContent() {
+    var inv = pendingInvite, kids;
     if (!currentUser) {
-      kids.push(h("p", { class: "hint", text: "Você recebeu um link de convite. Entre com sua conta Google para ver a equipe e aceitar." }));
-      kids.push(h("button", { type: "button", class: "btn primary", text: "Entrar com Google", onclick: loginGoogle }));
+      kids = [
+        h("h2", { class: "modal-title", text: "Você recebeu um convite" }),
+        h("p", { class: "modal-text", text: "Entre com sua conta Google para ver quem convidou você e para qual equipe." }),
+        h("div", { class: "modal-actions" }, [
+          h("button", { type: "button", class: "btn primary", text: "Entrar com Google", onclick: loginGoogle }),
+          h("button", { type: "button", class: "btn", text: "Agora não", onclick: dismissInvite })
+        ])
+      ];
     } else if (inv.error) {
-      kids.push(h("p", { class: "hint", text: inv.error }));
-      kids.push(h("button", { type: "button", class: "btn", text: "Fechar", onclick: function () { clearInvite(); renderTeam(); } }));
+      kids = [
+        h("h2", { class: "modal-title", text: "Convite indisponível" }),
+        h("p", { class: "modal-text", text: inv.error }),
+        h("div", { class: "modal-actions" }, [h("button", { type: "button", class: "btn primary", text: "Fechar", onclick: dismissInvite })])
+      ];
     } else if (!inv.info) {
-      kids.push(h("p", { class: "hint", text: "Verificando o convite…" }));
+      kids = [
+        h("h2", { class: "modal-title", text: "Verificando o convite…" }),
+        h("p", { class: "modal-text", text: "Só um instante." })
+      ];
     } else {
       var already = teams.some(function (t) { return t.id === inv.teamId; });
-      kids.push(h("p", { text: "Você foi convidado para a equipe " + inv.info.teamName + "." }));
-      kids.push(h("p", { class: "hint", text: "Ao entrar, você vê e edita os mesmos produtos e o mesmo estoque de todos os membros." }));
-      kids.push(h("button", { type: "button", class: "btn primary", text: already ? "Abrir equipe" : "Entrar na equipe", disabled: teamBusy, onclick: acceptInvite }));
+      var by = inv.info.byName;
+      var av = avatar({ photo: inv.info.byPhoto, name: by || "Equipe" }); av.classList.add("lg");
+      kids = [
+        h("div", { class: "modal-inviter" }, [
+          av,
+          h("p", { class: "modal-by" }, [h("b", { text: by || "Um membro da equipe" }), already ? " faz parte da equipe" : " convidou você para entrar na equipe"])
+        ]),
+        h("h2", { class: "modal-team", text: inv.info.teamName }),
+        h("p", { class: "modal-text", text: already
+          ? "Você já faz parte desta equipe."
+          : "Ao entrar, você vê e edita os mesmos produtos e o mesmo estoque de todos os membros." }),
+        h("div", { class: "modal-actions" }, already
+          ? [h("button", { type: "button", class: "btn primary", text: "Abrir equipe", disabled: teamBusy, onclick: acceptInvite }),
+             h("button", { type: "button", class: "btn", text: "Fechar", onclick: dismissInvite })]
+          : [h("button", { type: "button", class: "btn primary", text: teamBusy ? "Entrando…" : "Aceitar convite", disabled: teamBusy, onclick: acceptInvite }),
+             h("button", { type: "button", class: "btn", text: "Recusar", disabled: teamBusy, onclick: declineInvite })])
+      ];
     }
-    return h("div", { class: "team-card" }, kids);
+    return kids;
+  }
+  function renderInviteModal() {
+    var box = $("#invite-modal"), dlg = $("#invite-dialog"), shell = $(".shell");
+    if (!box || !dlg) return;
+    if (!pendingInvite) {
+      if (inviteOpen) {
+        inviteOpen = false; box.hidden = true; dlg.innerHTML = "";
+        document.body.classList.remove("modal-open"); if (shell) shell.inert = false;
+        if (inviteLastFocus && inviteLastFocus.focus) { try { inviteLastFocus.focus(); } catch (e) {} }
+      }
+      return;
+    }
+    if (!inviteOpen) {
+      inviteOpen = true; inviteLastFocus = document.activeElement;
+      document.body.classList.add("modal-open"); if (shell) shell.inert = true; box.hidden = false;
+    }
+    dlg.innerHTML = "";
+    inviteModalContent().forEach(function (c) { dlg.appendChild(c); });
+    if (currentUser) loadInviteInfo();
+    var first = dlg.querySelector("button:not([disabled])"); if (first) first.focus();
   }
   function signedOutCard() {
     return h("div", { class: "team-card" }, [
@@ -1810,11 +1898,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     var a = document.activeElement;
     if (a && a.tagName === "INPUT" && !a.readOnly && box.contains(a)) return;
     box.innerHTML = "";
-    if (pendingInvite) {
-      box.appendChild(inviteCard());
-      if (currentUser) loadInviteInfo();
-    }
-    if (!currentUser) { if (!pendingInvite) box.appendChild(signedOutCard()); return; }
+    if (!currentUser) { box.appendChild(signedOutCard()); return; }
     if (!teams.length) { box.appendChild(createTeamCard()); return; }
     box.appendChild(teamPanel());
   }
@@ -1834,8 +1918,8 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       ws = readWorkspacePref(user);
       startCloud(user);
       watchMyTeams(user);
-      if (pendingInvite) loadInviteInfo();
     } else stopCloud();
+    renderInviteModal();
     renderTeam();
   });
 
@@ -2471,7 +2555,8 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   pendingInvite = readInviteFromUrl();
   if (pendingInvite) { try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) {} }
   var start = location.hash.replace("#", "");
-  showView(pendingInvite ? "equipe" : (["calculadora", "produtos", "estoque", "equipe"].indexOf(start) >= 0 ? start : "inicio"));
+  showView(["calculadora", "produtos", "estoque", "equipe"].indexOf(start) >= 0 ? start : "inicio");
+  renderInviteModal();
 })();
 
   /* ---------- PWA ---------- */
