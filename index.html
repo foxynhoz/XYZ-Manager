@@ -597,6 +597,75 @@
     .row.inv-fil .f-name, .row.inv-mat .f-name { grid-column: 1 / -1; }
     .row.inv-fil .row-end, .row.inv-mat .row-end { grid-column: 1 / -1; justify-content: space-between; }
   }
+  /* Dashboard */
+  input[type="date"] {
+    width: 100%; font: inherit; font-variant-numeric: tabular-nums; color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; min-height: 44px;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) input[type="date"] { color-scheme: dark; } }
+  :root[data-theme="dark"] input[type="date"] { color-scheme: dark; }
+  .dash-range { min-width: 180px; }
+  .dash-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .stat .label { margin: 0; color: var(--muted); font-size: 0.88rem; display: flex; align-items: center; gap: 8px; }
+  .stat .label i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .stat .big {
+    margin: 4px 0 2px; font-family: var(--font-head); font-weight: 700; font-size: 1.8rem;
+    letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+  }
+  .stat .sub { margin: 0; color: var(--muted); font-size: 0.85rem; }
+  .dash-note { margin: 0 0 28px; color: var(--muted); font-size: 0.9rem; max-width: 70ch; min-height: 1.2em; }
+  .chart-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 10px 8px; }
+  .chart-wrap svg { width: 100%; height: auto; display: block; }
+  .chart-wrap .empty-state { margin: 8px; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; font-size: 0.88rem; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .legend i.ln { height: 3px; width: 16px; border-radius: 2px; background: var(--ink); }
+  .dash-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 28px; }
+  .dash-split h3 { font-family: var(--font-head); font-size: 1.05rem; margin: 0 0 10px; letter-spacing: -0.01em; }
+  .catbar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--line); margin-bottom: 12px; }
+  .catbar i { display: block; height: 100%; }
+  .dl { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 0.95rem; }
+  .dl i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .dl span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .dl b { font-variant-numeric: tabular-nums; }
+  .dl small { color: var(--muted); min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+  .ilist { display: grid; gap: 12px; }
+  .it-head { display: flex; justify-content: space-between; gap: 12px; font-size: 0.95rem; }
+  .it-head span { min-width: 0; overflow-wrap: anywhere; }
+  .it-head b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .it-bar { height: 6px; border-radius: 3px; background: var(--line); margin-top: 5px; overflow: hidden; }
+  .it-bar i { display: block; height: 100%; border-radius: 3px; }
+  .xcard .fields { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: end; }
+  .xcard .btn-row { align-self: end; }
+  .xlist { margin-top: 16px; display: flex; flex-direction: column; }
+  .xrow {
+    display: grid; grid-template-columns: 92px 130px minmax(0, 1fr) 112px auto; gap: 8px 12px;
+    align-items: center; padding: 10px 0; border-top: 1px dashed var(--line);
+  }
+  .xrow:first-child { border-top: 0; }
+  .xrow .cat { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--muted); }
+  .xrow .cat i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .xrow .desc { min-width: 0; overflow-wrap: anywhere; }
+  .xrow .desc small { display: block; color: var(--muted); }
+  .xrow .amt { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  .xrow .acts { display: flex; gap: 6px; justify-content: flex-end; }
+  .inrow {
+    display: grid; grid-template-columns: minmax(0, 1.5fr) 140px 160px 120px 120px; gap: 10px 12px;
+    align-items: end; padding: 14px 0; border-top: 1px dashed var(--line);
+  }
+  .inrow:first-child { border-top: 0; }
+  .inrow .pname { text-align: left; align-self: center; overflow-wrap: anywhere; }
+  .inrow output { display: flex; align-items: center; min-height: 44px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  @media (max-width: 760px) {
+    .xrow { grid-template-columns: 1fr auto; }
+    .xrow .date, .xrow .cat, .xrow .desc { grid-column: 1 / -1; }
+    .xrow .amt { text-align: left; }
+    .inrow { grid-template-columns: 1fr 1fr; }
+    .inrow .pname { grid-column: 1 / -1; }
+  }
 </style>
 </head>
 <body data-view="inicio">
@@ -627,6 +696,10 @@
       <button type="button" class="nav-item" data-go="estoque">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg>
         <span>Estoque</span>
+      </button>
+      <button type="button" class="nav-item" data-go="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>
+        <span>Dashboard</span>
       </button>
     </div>
     <div class="nav nav-team">
@@ -674,6 +747,12 @@
           <span class="tool-desc">Filamentos e materiais com preço e quantidade, para usar nos cálculos.</span>
           <span class="tool-meta" id="home-inv-desc">Nada cadastrado ainda.</span>
           <span class="tool-cta">Abrir estoque</span>
+        </button>
+        <button type="button" class="tool" data-go="dashboard">
+          <span class="tool-title">Dashboard</span>
+          <span class="tool-desc">Gastos com filamentos e materiais, ganho de cada produto e o resultado em gráfico.</span>
+          <span class="tool-meta" id="home-dash-desc">Nenhum gasto ou ganho registrado ainda.</span>
+          <span class="tool-cta">Abrir dashboard</span>
         </button>
         <div class="last">
           <p class="label">Último cálculo desta sessão</p>
@@ -828,6 +907,74 @@
       <p class="hint">Remover um item do estoque não muda produtos já salvos: cada peça guarda o nome, o preço e a quantidade usados na hora em que foi salva. Remover uma peça ou um produto também não devolve o material ao estoque.</p>
     </div>
 
+    <!-- DASHBOARD -->
+    <div class="view" id="view-dashboard" hidden>
+      <p class="save-status" role="status"></p>
+      <header class="top">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Registre os gastos com filamentos e materiais e o ganho de cada produto. O resultado e o gráfico usam os dois.</p>
+        </div>
+        <label class="f dash-range"><span>Período</span>
+          <select id="dash-range">
+            <option value="6">Últimos 6 meses</option>
+            <option value="12">Últimos 12 meses</option>
+            <option value="ano">Este ano</option>
+            <option value="tudo">Tudo</option>
+          </select>
+        </label>
+      </header>
+
+      <div class="dash-cards" id="dash-cards"></div>
+      <p class="dash-note" id="dash-note"></p>
+
+      <section class="block">
+        <h2>Ganhos e gastos por mês</h2>
+        <p class="hint">As barras mostram o que entrou e o que saiu em cada mês. A linha é o resultado do mês (ganhos menos gastos). Passe o mouse ou toque em um mês para ver os valores.</p>
+        <div class="chart-wrap" id="dash-chart"></div>
+        <div class="legend" aria-hidden="true">
+          <span><i style="background: var(--c-fil)"></i>Ganhos</span>
+          <span><i style="background: var(--c-waste)"></i>Gastos</span>
+          <span><i class="ln"></i>Resultado</span>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Para onde vai o dinheiro</h2>
+        <p class="hint">Gastos do período por categoria e por item.</p>
+        <div class="dash-split">
+          <div><h3>Por categoria</h3><div id="dash-cats"></div></div>
+          <div><h3>Por filamento e material</h3><div id="dash-items"></div></div>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Gastos</h2>
+        <p class="hint">Cada compra ou despesa entra com data, categoria e valor. Se escolher um item do estoque, o nome e o preço são preenchidos para você. Registrar um gasto aqui não altera a quantidade em estoque.</p>
+        <div class="card xcard" id="x-form">
+          <div class="fields">
+            <label class="f"><span>Data</span><input type="date" id="x-date"></label>
+            <label class="f"><span>Categoria</span><select id="x-cat"></select></label>
+            <label class="f" id="x-stock-wrap"><span>Do estoque (opcional)</span><select id="x-stock"></select></label>
+            <label class="f"><span>Descrição</span><input type="text" id="x-desc" maxlength="80" placeholder="Rolo de PLA preto"></label>
+            <label class="f"><span>Valor (R$)</span><input type="number" inputmode="decimal" min="0" step="any" id="x-amount" placeholder="0,00"></label>
+            <div class="btn-row">
+              <button type="button" class="btn primary" id="x-save">Registrar gasto</button>
+              <button type="button" class="btn" id="x-cancel" hidden>Cancelar edição</button>
+            </div>
+          </div>
+          <p class="note" id="x-note" role="status"></p>
+        </div>
+        <div class="xlist" id="x-list"></div>
+      </section>
+
+      <section class="block">
+        <h2>Ganhos por produto</h2>
+        <p class="hint">Informe quanto cada produto rendeu e a data do recebimento. É o mesmo valor do campo &quot;Quanto o cliente pagou&quot; dentro do produto. O custo calculado e o lucro estimado vêm das peças e da embalagem do produto. Só entram no dashboard os ganhos com data dentro do período escolhido.</p>
+        <div id="dash-income"></div>
+      </section>
+    </div>
+
     <!-- PRODUTOS -->
     <div class="view" id="view-produtos" hidden>
       <p class="save-status" id="save-status" role="status"></p>
@@ -898,6 +1045,7 @@
             <div class="card">
               <h3>Valor cobrado</h3>
               <label class="f"><span>Quanto o cliente pagou (R$)</span><input type="number" inputmode="decimal" min="0" step="any" id="d-charged" placeholder="0,00"></label>
+              <label class="f"><span>Data do recebimento</span><input type="date" id="d-charged-at"></label>
               <div class="profit" id="d-profit"></div>
             </div>
           </aside>
@@ -1242,7 +1390,35 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     }, function () {
       invSaving = false;
       if (ws.type === "team") { setStatus("Não foi possível salvar na equipe. Tente de novo em instantes."); return; }
-      store.mode = "local"; lsWrite(); lsWriteInv(); invDirty = false;
+      store.mode = "local"; lsWrite(); lsWriteInv(); lsWriteExp(); invDirty = false;
+      setStatus("Não foi possível salvar na conta. Seus dados ficaram salvos neste navegador.");
+    });
+  }
+  /* ---------- gastos (dados do dashboard) ---------- */
+  var LS_EXP = "impressao3d-gastos";
+  var expenses = [];
+  var expDirty = false, expSeq = 0, expSaving = false, expAgain = false, expTimer;
+  function lsReadExp() { try { var r = localStorage.getItem(LS_EXP); var a = r ? JSON.parse(r) : []; return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function lsWriteExp() { try { localStorage.setItem(LS_EXP, JSON.stringify(expenses)); } catch (e) {} }
+  function touchExp() {
+    expDirty = true; expSeq++; setStatus("Salvando…");
+    clearTimeout(expTimer); expTimer = setTimeout(flushExp, 500);
+  }
+  function commitExp() { touchExp(); clearTimeout(expTimer); flushExp(); }
+  function flushExp() {
+    if (store.mode === "local") { lsWriteExp(); expDirty = false; setStatus(storageLabel()); return; }
+    if (expSaving) { expAgain = true; return; }
+    expSaving = true;
+    var seq = expSeq;
+    store.col.doc("_gastos").set({ items: clone(expenses) }).then(function () {
+      expSaving = false;
+      if (expAgain) { expAgain = false; flushExp(); return; }
+      if (expSeq === seq) expDirty = false;
+      setStatus(storageLabel());
+    }, function () {
+      expSaving = false;
+      if (ws.type === "team") { setStatus("Não foi possível salvar na equipe. Tente de novo em instantes."); return; }
+      store.mode = "local"; lsWrite(); lsWriteInv(); lsWriteExp(); expDirty = false;
       setStatus("Não foi possível salvar na conta. Seus dados ficaram salvos neste navegador.");
     });
   }
@@ -1375,7 +1551,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     }, function () {
       saving[id] = false;
       if (ws.type === "team") { setStatus("Não foi possível salvar na equipe. Tente de novo em instantes."); return; }
-      store.mode = "local"; lsWrite(); lsWriteInv(); dirty[id] = false;
+      store.mode = "local"; lsWrite(); lsWriteInv(); lsWriteExp(); dirty[id] = false;
       setStatus("Não foi possível salvar na conta. Seus produtos ficaram salvos neste navegador.");
     });
   }
@@ -1393,9 +1569,10 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   }
 
   function onCloud(snap) {
-    var incoming = [], invDoc = null;
+    var incoming = [], invDoc = null, expDoc = null;
     snap.docs.forEach(function (d) {
       if (d.id === "_estoque") { invDoc = clone(d.data()); return; }
+      if (d.id === "_gastos") { expDoc = clone(d.data()); return; }
       if (deleted[d.id]) return;
       var o = clone(d.data()); o.id = d.id; incoming.push(o);
     });
@@ -1406,6 +1583,8 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
 
     if (invDoc && !invDirty) { inventory = Array.isArray(invDoc.items) ? invDoc.items : []; inventory.forEach(normalizeFilament); }
     else if (firstDef && !invDoc && inventory.length && personal) commitInv();
+    if (expDoc && !expDirty) { expenses = Array.isArray(expDoc.items) ? expDoc.items : []; }
+    else if (firstDef && !expDoc && expenses.length && personal) commitExp();
 
     var merge = true;
     if (firstDef && incoming.length === 0 && products.length && personal) {
@@ -1415,7 +1594,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     } else if (!definitive && incoming.length === 0 && !synced) {
       merge = false;
     }
-    if (firstDef && personal) { try { localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_INV); } catch (e) {} }
+    if (firstDef && personal) { try { localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_INV); localStorage.removeItem(LS_EXP); } catch (e) {} }
     if (merge) {
       var map = {}; incoming.forEach(function (o) { map[o.id] = o; });
       var out = incoming.map(function (o) { return dirty[o.id] ? (byId(o.id) || o) : o; });
@@ -1466,7 +1645,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     currentUser = null;
     store.mode = "local"; store.col = null; synced = false;
     products = lsRead().sort(byUpdated);
-    inventory = lsReadInv(); inventory.forEach(normalizeFilament);
+    inventory = lsReadInv(); inventory.forEach(normalizeFilament); expenses = lsReadExp();
     invDrafts = {};
     rerender();
     setStatus(storageLabel());
@@ -1476,7 +1655,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     if (cloudUnsub) cloudUnsub();
     currentUser = user;
     // dados da equipe nunca se misturam com os dados locais deste navegador
-    if (ws.type === "team") { products = []; inventory = []; }
+    if (ws.type === "team") { products = []; inventory = []; expenses = []; }
     store = makeCloudStore(dataBase(user));
     synced = false;
     setStatus("Carregando os dados…");
@@ -1491,7 +1670,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       }
       store.mode = "local";
       store.col = null;
-      lsWrite(); lsWriteInv();
+      lsWrite(); lsWriteInv(); lsWriteExp();
       setStatus("Sem acesso à conta. Seus dados ficaram salvos neste navegador.");
     });
   }
@@ -1578,13 +1757,15 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   function flushAll() {
     Object.keys(dirty).forEach(function (id) { if (dirty[id]) flush(id); });
     if (invDirty) flushInv();
+    if (expDirty) flushExp();
   }
   function resetData() {
     Object.keys(timers).forEach(function (k) { clearTimeout(timers[k]); });
-    clearTimeout(invTimer);
-    products = []; inventory = [];
+    clearTimeout(invTimer); clearTimeout(expTimer);
+    products = []; inventory = []; expenses = [];
     dirty = {}; editSeq = {}; saving = {}; again = {}; timers = {}; deleted = {};
     invDirty = false; invSaving = false; invAgain = false; invDrafts = {};
+    expDirty = false; expSaving = false; expAgain = false;
     ui.openId = null; ui.edit = null; ui.addTo = null; ui.invEdit = null;
   }
   function resetForAccountChange() {
@@ -1709,6 +1890,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       if (copy) {
         var jobs = products.map(function (p) { return setDoc(doc(db, "teams", tid, "products", p.id), clone(p)); });
         if (inventory.length) jobs.push(setDoc(doc(db, "teams", tid, "products", "_estoque"), { items: clone(inventory) }));
+        if (expenses.length) jobs.push(setDoc(doc(db, "teams", tid, "products", "_gastos"), { items: clone(expenses) }));
         await Promise.all(jobs);
       }
       teamNameDraft = "";
@@ -1975,6 +2157,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     if (v === "produtos") renderProducts();
     if (v === "calculadora") { refreshStockSelects(); updateSaveTargets(); renderSavebox(); }
     if (v === "estoque") renderInventory();
+    if (v === "dashboard") renderDashboard();
     if (v === "equipe") renderTeam();
     window.scrollTo(0, 0);
   }
@@ -2053,12 +2236,23 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     var fi = inventory.filter(function (i) { return i.type === "filamento"; }).length, mi = inventory.length - fi;
     $("#home-inv-desc").textContent = inventory.length === 0 ? "Nada cadastrado ainda."
       : fi + (fi === 1 ? " filamento" : " filamentos") + " e " + mi + (mi === 1 ? " material." : " materiais.");
+    var inc = 0, spent = 0;
+    products.forEach(function (p) { if (p.charged > 0) inc += p.charged; });
+    expenses.forEach(function (x) { spent += n(x.amount); });
+    $("#home-dash-desc").textContent = (inc === 0 && spent === 0) ? "Nenhum gasto ou ganho registrado ainda."
+      : "Resultado geral: " + brl.format(inc - spent) + ".";
   }
   function rerender() {
     updateHome(); updateSaveTargets(); renderSavebox();
     var a = document.activeElement;
     if (ui.view === "estoque") {
       if (!(a && a.tagName === "INPUT" && $("#view-estoque").contains(a))) renderInventory();
+      return;
+    }
+    if (ui.view === "dashboard") {
+      var ad = document.activeElement;
+      if (ad && /^(INPUT|SELECT)$/.test(ad.tagName) && $("#view-dashboard").contains(ad)) renderDashSummary();
+      else renderDashboard();
       return;
     }
     if (ui.view === "calculadora") { refreshStockSelects(); return; }
@@ -2094,6 +2288,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   function renderDetail(p) {
     var nm = $("#d-name"); if (document.activeElement !== nm) nm.value = p.name || "";
     var ch = $("#d-charged"); if (document.activeElement !== ch) ch.value = p.charged > 0 ? p.charged : "";
+    var cd = $("#d-charged-at"); if (document.activeElement !== cd) cd.value = p.charged > 0 ? incomeDate(p) : "";
     renderThumb(p); renderTags(p); renderSubs(p); renderPack(p); renderTotals(p);
   }
 
@@ -2517,7 +2712,14 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     var p = cur(); if (!p) return; p.name = e.target.value; touch(p.id);
   });
   $("#d-charged").addEventListener("input", function (e) {
-    var p = cur(); if (!p) return; p.charged = n(e.target.value) || null; touch(p.id); renderTotals(p);
+    var p = cur(); if (!p) return; p.charged = n(e.target.value) || null;
+    if (p.charged > 0 && !p.chargedAt) { p.chargedAt = todayStr(); $("#d-charged-at").value = p.chargedAt; }
+    touch(p.id); renderTotals(p);
+  });
+  $("#d-charged-at").addEventListener("input", function (e) {
+    var p = cur(); if (!p) return;
+    if (validDate(e.target.value)) p.chargedAt = e.target.value; else delete p.chargedAt;
+    touch(p.id);
   });
   $("#d-add-tag").addEventListener("click", addTag);
   $("#d-new-tag").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); addTag(); } });
@@ -2628,18 +2830,345 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     delete p.thumb; commit(p.id); renderThumb(p); toast("Imagem removida.");
   });
 
+  /* ---------- dashboard: gastos, ganhos e gráfico ---------- */
+  var EXP_CATS = [
+    { id: "filamento", label: "Filamento", color: "var(--c-fil)" },
+    { id: "material", label: "Material", color: "var(--c-mat)" },
+    { id: "embalagem", label: "Embalagem", color: "var(--c-pack)" },
+    { id: "energia", label: "Energia", color: "var(--c-en)" },
+    { id: "outros", label: "Outros", color: "var(--muted)" }
+  ];
+  function catOf(id) {
+    for (var i = 0; i < EXP_CATS.length; i++) if (EXP_CATS[i].id === id) return EXP_CATS[i];
+    return EXP_CATS[EXP_CATS.length - 1];
+  }
+  var dash = { range: "6", editId: null };
+  function pad2(x) { return (x < 10 ? "0" : "") + x; }
+  function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+  function todayStr() { return ymd(new Date()); }
+  function validDate(s) { return /^\d{4}-\d{2}-\d{2}$/.test(s || ""); }
+  function fmtDate(s) { return validDate(s) ? s.slice(8, 10) + "/" + s.slice(5, 7) + "/" + s.slice(0, 4) : ""; }
+  function incomeDate(p) { return validDate(p.chargedAt) ? p.chargedAt : ymd(new Date(p.createdAt || p.updatedAt || Date.now())); }
+  function r2(x) { return Math.round(x * 100) / 100; }
+  function monthLabel(key) {
+    var y = +key.slice(0, 4), m = +key.slice(5, 7);
+    var s = new Date(y, m - 1, 1).toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
+    return s + "/" + String(y).slice(2);
+  }
+  function moneyShort(v) {
+    var a = Math.abs(v), s = v < 0 ? "-" : "";
+    return a >= 1000 ? s + "R$ " + nf1.format(a / 1000) + " mil" : s + "R$ " + Math.round(a);
+  }
+  function niceStep(raw) {
+    var p = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10)), f = raw / p;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p;
+  }
+  function allDates() {
+    var a = [];
+    expenses.forEach(function (x) { if (validDate(x.date)) a.push(x.date); });
+    products.forEach(function (p) { if (p.charged > 0) a.push(incomeDate(p)); });
+    return a;
+  }
+  function monthRange() {
+    var now = new Date(), cur = now.getFullYear() + "-" + pad2(now.getMonth() + 1), first = cur, last = cur;
+    if (dash.range === "6" || dash.range === "12") {
+      var d = new Date(now.getFullYear(), now.getMonth() - (+dash.range - 1), 1);
+      first = d.getFullYear() + "-" + pad2(d.getMonth() + 1);
+    } else if (dash.range === "ano") {
+      first = now.getFullYear() + "-01";
+    } else {
+      allDates().forEach(function (ds) { var k = ds.slice(0, 7); if (k < first) first = k; if (k > last) last = k; });
+    }
+    var keys = [], y = +first.slice(0, 4), m = +first.slice(5, 7);
+    while ((y + "-" + pad2(m)) <= last && keys.length < 120) {
+      keys.push(y + "-" + pad2(m));
+      m++; if (m > 12) { m = 1; y++; }
+    }
+    return keys;
+  }
+  function expLabel(x) {
+    var it = x.stockId ? invById(x.stockId) : null;
+    return (it && it.name) || x.desc || catOf(x.cat).label;
+  }
+  function dashData() {
+    var months = monthRange(), idx = {};
+    months.forEach(function (k, i) { idx[k] = i; });
+    var D = { months: months, inc: months.map(function () { return 0; }), exp: months.map(function () { return 0; }),
+              byCat: {}, byItem: {}, sold: [], estCost: 0, income: 0, spent: 0, nExp: 0 };
+    expenses.forEach(function (x) {
+      if (!validDate(x.date)) return;
+      var i = idx[x.date.slice(0, 7)]; if (i == null) return;
+      var a = n(x.amount);
+      D.exp[i] += a; D.spent += a; D.nExp++;
+      D.byCat[x.cat] = (D.byCat[x.cat] || 0) + a;
+      var label = expLabel(x), key = (x.stockId || "") + "|" + label.toLowerCase();
+      var o = D.byItem[key] || (D.byItem[key] = { label: label, cat: x.cat, total: 0 });
+      o.total += a;
+    });
+    products.forEach(function (p) {
+      if (!(p.charged > 0)) return;
+      var i = idx[incomeDate(p).slice(0, 7)]; if (i == null) return;
+      D.inc[i] += p.charged; D.income += p.charged;
+      D.estCost += computeProduct(p).total; D.sold.push(p);
+    });
+    return D;
+  }
+
+  function renderDashCards(D) {
+    var res = D.income - D.spent;
+    var cards = [
+      ["Ganhos", "var(--c-fil)", brl.format(D.income), D.sold.length + (D.sold.length === 1 ? " produto com valor cobrado" : " produtos com valor cobrado"), ""],
+      ["Gastos", "var(--c-waste)", brl.format(D.spent), D.nExp + (D.nExp === 1 ? " lançamento" : " lançamentos"), ""],
+      ["Resultado", "var(--ink)", brl.format(res), D.income > 0 ? nf1.format((res / D.income) * 100) + "% dos ganhos" : "Sem ganhos no período", res < 0 ? "neg" : ""]
+    ];
+    var box = $("#dash-cards"); box.innerHTML = "";
+    cards.forEach(function (c) {
+      box.appendChild(h("div", { class: "stat" }, [
+        h("p", { class: "label" }, [h("i", { style: "background:" + c[1] }), c[0]]),
+        h("p", { class: "big " + c[4], text: c[2] }),
+        h("p", { class: "sub", text: c[3] })
+      ]));
+    });
+    $("#dash-note").textContent = D.sold.length
+      ? "Pela calculadora, os produtos vendidos no período custam " + brl.format(D.estCost) + ", o que daria um lucro estimado de " + brl.format(D.income - D.estCost) + ". O resultado acima usa o que você realmente gastou."
+      : "";
+  }
+
+  function renderChart(D) {
+    var box = $("#dash-chart");
+    var res = D.inc.map(function (v, i) { return v - D.exp[i]; });
+    var hiV = Math.max.apply(null, D.inc.concat(D.exp, res, [0])), loV = Math.min.apply(null, res.concat([0]));
+    if (hiV === 0 && loV === 0) {
+      box.innerHTML = '<div class="empty-state">Sem dados no período. Registre um gasto ou o valor cobrado de um produto para ver o gráfico.</div>';
+      return;
+    }
+    var step = niceStep((hiV - loV) / 4), lo = Math.floor(loV / step) * step, hi = Math.ceil(hiV / step) * step;
+    var W = Math.max(300, Math.min(900, Math.round(box.clientWidth - 20) || 720)), H = W < 480 ? 250 : 300;
+    var ml = W < 480 ? 60 : 68, mr = 12, mt = 14, mb = 36, pw = W - ml - mr, ph = H - mt - mb;
+    function Y(v) { return mt + ((hi - v) / (hi - lo)) * ph; }
+    var g = D.months.length, gw = pw / g, bw = Math.max(3, Math.min(26, gw * 0.3)), lblStep = Math.ceil(g / 12);
+    var y0 = Y(0), s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Ganhos, gastos e resultado por mês">';
+    for (var v = lo; v <= hi + step / 2; v += step) {
+      var y = Y(v);
+      s += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + y + '" y2="' + y + '" style="stroke:var(--line)" stroke-width="' + (Math.abs(v) < step / 2 ? 1.6 : 1) + '"/>';
+      s += '<text x="' + (ml - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" style="fill:var(--muted)">' + moneyShort(v) + "</text>";
+    }
+    var pts = [];
+    D.months.forEach(function (k, i) {
+      var cx = ml + gw * (i + 0.5);
+      [[D.inc[i], cx - bw - 1, "var(--c-fil)"], [D.exp[i], cx + 1, "var(--c-waste)"]].forEach(function (b) {
+        if (b[0] <= 0) return;
+        s += '<rect x="' + b[1] + '" y="' + Y(b[0]) + '" width="' + bw + '" height="' + Math.max(1, y0 - Y(b[0])) + '" rx="2" style="fill:' + b[2] + '"/>';
+      });
+      pts.push([cx, Y(res[i])]);
+      if (i % lblStep === 0) s += '<text x="' + cx + '" y="' + (H - 13) + '" text-anchor="middle" font-size="11" style="fill:var(--muted)">' + monthLabel(k) + "</text>";
+    });
+    if (pts.length > 1) s += '<polyline fill="none" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--ink)" points="' + pts.map(function (p) { return p[0] + "," + p[1]; }).join(" ") + '"/>';
+    pts.forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.5" style="fill:var(--ink);stroke:var(--surface)" stroke-width="1.5"/>'; });
+    D.months.forEach(function (k, i) {
+      s += '<rect x="' + (ml + gw * i) + '" y="' + mt + '" width="' + gw + '" height="' + ph + '" fill="transparent"><title>' +
+        monthLabel(k) + "\nGanhos: " + brl.format(D.inc[i]) + "\nGastos: " + brl.format(D.exp[i]) + "\nResultado: " + brl.format(res[i]) + "</title></rect>";
+    });
+    box.innerHTML = s + "</svg>";
+  }
+
+  function renderBreakdown(D) {
+    var cats = $("#dash-cats"), items = $("#dash-items"); cats.innerHTML = ""; items.innerHTML = "";
+    if (D.spent <= 0) {
+      cats.appendChild(h("div", { class: "empty-state", text: "Nenhum gasto no período." }));
+      items.appendChild(h("div", { class: "empty-state", text: "Nenhum gasto no período." }));
+      return;
+    }
+    var bar = h("div", { class: "catbar", role: "img", "aria-label": "Gastos por categoria" });
+    EXP_CATS.forEach(function (c) {
+      var v = D.byCat[c.id] || 0; if (v <= 0) return;
+      var i = h("i", { style: "background:" + c.color }); i.style.width = (v / D.spent) * 100 + "%"; bar.appendChild(i);
+    });
+    cats.appendChild(bar);
+    EXP_CATS.forEach(function (c) {
+      var v = D.byCat[c.id] || 0; if (v <= 0) return;
+      cats.appendChild(h("div", { class: "dl" }, [
+        h("i", { style: "background:" + c.color }), h("span", { text: c.label }),
+        h("b", { text: brl.format(v) }), h("small", { text: nf1.format((v / D.spent) * 100) + "%" })
+      ]));
+    });
+    var list = Object.keys(D.byItem).map(function (k) { return D.byItem[k]; })
+      .sort(function (a, b) { return b.total - a.total; }).slice(0, 8);
+    var wrap = h("div", { class: "ilist" });
+    list.forEach(function (o) {
+      var fill = h("i", { style: "background:" + catOf(o.cat).color }); fill.style.width = (o.total / list[0].total) * 100 + "%";
+      wrap.appendChild(h("div", {}, [
+        h("div", { class: "it-head" }, [h("span", { text: o.label }), h("b", { text: brl.format(o.total) })]),
+        h("div", { class: "it-bar" }, [fill])
+      ]));
+    });
+    items.appendChild(wrap);
+  }
+
+  function renderDashSummary() {
+    var D = dashData();
+    renderDashCards(D); renderChart(D); renderBreakdown(D);
+  }
+
+  /* formulário de gastos */
+  function fillXStock() {
+    var cat = $("#x-cat").value;
+    var type = cat === "filamento" ? "filamento" : (cat === "material" || cat === "embalagem") ? "material" : null;
+    var wrap = $("#x-stock-wrap"), sel = $("#x-stock"), prev = sel.value;
+    wrap.hidden = !type; sel.innerHTML = "";
+    if (!type) return;
+    var add = function (v, t2) { var o = document.createElement("option"); o.value = v; o.textContent = t2; sel.appendChild(o); };
+    var list = inventory.filter(function (i) { return i.type === type; })
+      .sort(function (a, b) { return (a.name || "").localeCompare(b.name || "", "pt-BR"); });
+    add("", list.length ? "Nenhum (digitar a descrição)" : "Estoque vazio");
+    list.forEach(function (i) { add(i.id, (i.name || "Sem nome") + (i.price > 0 ? ", " + brl.format(i.price) : "")); });
+    sel.value = list.some(function (i) { return i.id === prev; }) ? prev : "";
+  }
+  function initXForm() {
+    var sel = $("#x-cat");
+    EXP_CATS.forEach(function (c) { var o = document.createElement("option"); o.value = c.id; o.textContent = c.label; sel.appendChild(o); });
+    sel.value = "filamento"; fillXStock();
+    $("#x-date").value = todayStr();
+  }
+  function resetXForm() {
+    dash.editId = null;
+    $("#x-desc").value = ""; $("#x-amount").value = ""; $("#x-stock").value = "";
+    $("#x-date").value = todayStr();
+    $("#x-save").textContent = "Registrar gasto"; $("#x-cancel").hidden = true;
+  }
+  function loadExpense(id) {
+    var x = expenses.filter(function (e) { return e.id === id; })[0]; if (!x) return;
+    dash.editId = id;
+    $("#x-date").value = validDate(x.date) ? x.date : todayStr();
+    $("#x-cat").value = catOf(x.cat).id; fillXStock();
+    $("#x-stock").value = x.stockId && invById(x.stockId) ? x.stockId : "";
+    $("#x-desc").value = x.desc || ""; $("#x-amount").value = x.amount > 0 ? x.amount : "";
+    $("#x-save").textContent = "Salvar alterações"; $("#x-cancel").hidden = false;
+    $("#x-note").textContent = "";
+    $("#x-form").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  function saveExpense() {
+    var note = $("#x-note");
+    var date = $("#x-date").value, cat = $("#x-cat").value, stockId = $("#x-stock").value || null;
+    var desc = $("#x-desc").value.trim(), amount = n($("#x-amount").value);
+    if (!validDate(date)) { note.textContent = "Informe a data do gasto."; return; }
+    if (!(amount > 0)) { note.textContent = "Informe um valor maior que zero."; return; }
+    var it = stockId ? invById(stockId) : null;
+    if (!desc) desc = (it && it.name) || catOf(cat).label;
+    var rec = { id: dash.editId || uid(), date: date, cat: cat, stockId: it ? stockId : null, desc: desc, amount: r2(amount) };
+    var i = -1; expenses.forEach(function (e, k) { if (e.id === rec.id) i = k; });
+    if (i >= 0) expenses[i] = rec; else expenses.push(rec);
+    var wasEdit = !!dash.editId;
+    var inRange = monthRange().indexOf(date.slice(0, 7)) >= 0;
+    commitExp(); resetXForm(); renderDashboard();
+    note.textContent = inRange ? "" : "Gasto salvo, mas a data está fora do período exibido. Escolha outro período para vê-lo.";
+    toast(wasEdit ? "Gasto atualizado." : "Gasto registrado.");
+  }
+  function removeExpense(id) {
+    expenses = expenses.filter(function (e) { return e.id !== id; });
+    if (dash.editId === id) resetXForm();
+    commitExp(); renderDashboard(); toast("Gasto excluído.");
+  }
+  function renderExpList() {
+    var box = $("#x-list"); box.innerHTML = "";
+    var keys = monthRange(), first = keys[0], last = keys[keys.length - 1];
+    var list = expenses.filter(function (x) { var k = validDate(x.date) ? x.date.slice(0, 7) : ""; return k >= first && k <= last; })
+      .sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+    if (!list.length) { box.appendChild(h("div", { class: "empty-state", text: "Nenhum gasto registrado no período." })); return; }
+    list.forEach(function (x) {
+      var it = x.stockId ? invById(x.stockId) : null;
+      var del = h("button", { type: "button", class: "btn danger small", text: "Excluir" });
+      twoStep(del, function () { removeExpense(x.id); }, "Confirmar exclusão");
+      box.appendChild(h("div", { class: "xrow" }, [
+        h("span", { class: "date", text: fmtDate(x.date) }),
+        h("span", { class: "cat" }, [h("i", { style: "background:" + catOf(x.cat).color }), catOf(x.cat).label]),
+        h("span", { class: "desc" }, [expLabel(x), it && x.desc && x.desc !== it.name ? h("small", { text: x.desc }) : null]),
+        h("span", { class: "amt", text: brl.format(n(x.amount)) }),
+        h("span", { class: "acts" }, [h("button", { type: "button", class: "btn small", text: "Editar", onclick: function () { loadExpense(x.id); } }), del])
+      ]));
+    });
+  }
+
+  /* ganhos por produto */
+  function updateIncRow(row, p) {
+    var cost = computeProduct(p).total, profit = p.charged > 0 ? p.charged - cost : null;
+    $(".inc-cost", row).textContent = brl.format(cost);
+    var out = $(".inc-profit", row);
+    out.textContent = profit == null ? "—" : brl.format(profit);
+    out.className = "inc-profit" + (profit != null && profit < 0 ? " neg" : "");
+  }
+  function renderIncome() {
+    var box = $("#dash-income"); box.innerHTML = "";
+    if (!products.length) {
+      box.appendChild(h("div", { class: "empty-state", text: "Nenhum produto ainda. Crie produtos na aba Produtos para registrar os ganhos." }));
+      return;
+    }
+    products.forEach(function (p) {
+      var row = h("div", { class: "inrow" }, [
+        h("button", { type: "button", class: "link-btn pname", text: p.name || "Produto sem nome", onclick: function () { openProduct(p.id); } }),
+        h("label", { class: "f" }, [h("span", { text: "Valor cobrado (R$)" }),
+          h("input", { type: "number", inputmode: "decimal", min: "0", step: "any", class: "inc-val", "data-pid": p.id, placeholder: "0,00", value: p.charged > 0 ? p.charged : "" })]),
+        h("label", { class: "f" }, [h("span", { text: "Data do recebimento" }),
+          h("input", { type: "date", class: "inc-date", "data-pid": p.id, value: p.charged > 0 ? incomeDate(p) : "" })]),
+        h("div", { class: "f" }, [h("span", { text: "Custo calculado" }), h("output", { class: "inc-cost" })]),
+        h("div", { class: "f" }, [h("span", { text: "Lucro estimado" }), h("output", { class: "inc-profit" })])
+      ]);
+      updateIncRow(row, p);
+      box.appendChild(row);
+    });
+  }
+  $("#dash-income").addEventListener("change", function (e) {
+    var t2 = e.target, pid = t2.getAttribute("data-pid"), p = pid && byId(pid); if (!p) return;
+    var row = t2.closest(".inrow"), dateEl = $(".inc-date", row);
+    if (t2.classList.contains("inc-val")) {
+      p.charged = n(t2.value) || null;
+      if (p.charged > 0 && !p.chargedAt) p.chargedAt = todayStr();
+      if (!(p.charged > 0)) delete p.chargedAt;
+      dateEl.value = p.charged > 0 ? incomeDate(p) : "";
+    } else if (t2.classList.contains("inc-date")) {
+      if (validDate(t2.value)) p.chargedAt = t2.value; else delete p.chargedAt;
+      dateEl.value = p.charged > 0 ? incomeDate(p) : (validDate(p.chargedAt) ? p.chargedAt : "");
+    } else return;
+    commit(p.id); updateIncRow(row, p); renderDashSummary(); updateHome();
+  });
+
+  function renderDashboard() {
+    setStatus(storageLabel());
+    $("#dash-range").value = dash.range;
+    fillXStock();
+    renderDashSummary(); renderExpList(); renderIncome();
+  }
+  var rszTimer;
+  window.addEventListener("resize", function () {
+    clearTimeout(rszTimer);
+    rszTimer = setTimeout(function () { if (ui.view === "dashboard") renderDashSummary(); }, 150);
+  });
+  $("#dash-range").addEventListener("change", function (e) { dash.range = e.target.value; renderDashSummary(); renderExpList(); });
+  $("#x-cat").addEventListener("change", fillXStock);
+  $("#x-stock").addEventListener("change", function (e) {
+    var it = e.target.value ? invById(e.target.value) : null; if (!it) return;
+    if (!$("#x-desc").value.trim()) $("#x-desc").value = it.name || "";
+    if (!(n($("#x-amount").value) > 0) && it.price > 0) $("#x-amount").value = it.price;
+  });
+  $("#x-save").addEventListener("click", saveExpense);
+  $("#x-cancel").addEventListener("click", function () { resetXForm(); $("#x-note").textContent = ""; });
+  $("#x-form").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && e.target.tagName === "INPUT") { e.preventDefault(); saveExpense(); }
+  });
+  initXForm();
+
   /* ---------- início ---------- */
   populatePrinters();
   restoreSettings();
   addFil();
   products = lsRead().sort(byUpdated);
-  inventory = lsReadInv(); inventory.forEach(normalizeFilament);
+  inventory = lsReadInv(); inventory.forEach(normalizeFilament); expenses = lsReadExp();
   calc();
   updateHome();
   pendingInvite = readInviteFromUrl();
   if (pendingInvite) { try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) {} }
   var start = location.hash.replace("#", "");
-  showView(["calculadora", "produtos", "estoque", "equipe"].indexOf(start) >= 0 ? start : "inicio");
+  showView(["calculadora", "produtos", "estoque", "dashboard", "equipe"].indexOf(start) >= 0 ? start : "inicio");
   renderInviteModal();
 })();
 
