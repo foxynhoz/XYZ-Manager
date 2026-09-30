@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>XYZ Manager — Impressão 3D</title>
 <link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
 <meta name="theme-color" content="#0b7f77">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -659,12 +661,24 @@
   .inrow:first-child { border-top: 0; }
   .inrow .pname { text-align: left; align-self: center; overflow-wrap: anywhere; }
   .inrow output { display: flex; align-items: center; min-height: 44px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .dash-actions { margin-top: 18px; }
+  .finance-dialog {
+    width: min(1060px, 100%); max-height: min(820px, calc(100vh - 40px)); overflow: auto;
+    align-items: stretch; text-align: left; justify-items: stretch;
+  }
+  .finance-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .finance-head h2 { margin: 0; font-family: var(--font-head); font-size: 1.5rem; letter-spacing: -0.02em; }
+  .finance-head p { margin: 3px 0 0; color: var(--muted); }
+  .finance-tabs { display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+  .finance-tabs .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .finance-panel > .block:last-child { margin-bottom: 0; }
   @media (max-width: 760px) {
     .xrow { grid-template-columns: 1fr auto; }
     .xrow .date, .xrow .cat, .xrow .desc { grid-column: 1 / -1; }
     .xrow .amt { text-align: left; }
     .inrow { grid-template-columns: 1fr 1fr; }
     .inrow .pname { grid-column: 1 / -1; }
+    .finance-dialog { padding: 22px 18px; }
   }
 </style>
 </head>
@@ -948,30 +962,10 @@
         </div>
       </section>
 
-      <section class="block">
-        <h2>Gastos</h2>
-        <p class="hint">Cada compra ou despesa entra com data, categoria e valor. Se escolher um item do estoque, o nome e o preço são preenchidos para você. Registrar um gasto aqui não altera a quantidade em estoque.</p>
-        <div class="card xcard" id="x-form">
-          <div class="fields">
-            <label class="f"><span>Data</span><input type="date" id="x-date"></label>
-            <label class="f"><span>Categoria</span><select id="x-cat"></select></label>
-            <label class="f" id="x-stock-wrap"><span>Do estoque (opcional)</span><select id="x-stock"></select></label>
-            <label class="f"><span>Descrição</span><input type="text" id="x-desc" maxlength="80" placeholder="Rolo de PLA preto"></label>
-            <label class="f"><span>Valor (R$)</span><input type="number" inputmode="decimal" min="0" step="any" id="x-amount" placeholder="0,00"></label>
-            <div class="btn-row">
-              <button type="button" class="btn primary" id="x-save">Registrar gasto</button>
-              <button type="button" class="btn" id="x-cancel" hidden>Cancelar edição</button>
-            </div>
-          </div>
-          <p class="note" id="x-note" role="status"></p>
-        </div>
-        <div class="xlist" id="x-list"></div>
-      </section>
-
-      <section class="block">
-        <h2>Ganhos por produto</h2>
-        <p class="hint">Informe quanto cada produto rendeu e a data do recebimento. É o mesmo valor do campo &quot;Quanto o cliente pagou&quot; dentro do produto. O custo calculado e o lucro estimado vêm das peças e da embalagem do produto. Só entram no dashboard os ganhos com data dentro do período escolhido.</p>
-        <div id="dash-income"></div>
+      <section class="block dash-actions">
+        <h2>Lançamentos</h2>
+        <p class="hint">Registre gastos e recebimentos sem deixar o dashboard cheio de linhas. Tudo continua sendo usado nos indicadores e gráficos acima.</p>
+        <button type="button" class="btn primary" id="open-finance">Gerenciar gastos e ganhos</button>
       </section>
     </div>
 
@@ -1060,6 +1054,46 @@
 <div class="mbar" aria-hidden="true"><span>Valor bruto</span><b id="m-total">R$ 0,00</b></div>
 <div class="modal-backdrop" id="invite-modal" hidden>
   <div class="modal" id="invite-dialog" role="dialog" aria-modal="true" aria-label="Convite para entrar em uma equipe"></div>
+</div>
+<div class="modal-backdrop" id="finance-modal" hidden>
+  <div class="modal finance-dialog" id="finance-dialog" role="dialog" aria-modal="true" aria-labelledby="finance-title">
+    <div class="finance-head">
+      <div><h2 id="finance-title">Gastos e ganhos</h2><p>Registre e consulte os lançamentos dos seus produtos.</p></div>
+      <button type="button" class="btn small" id="close-finance">Fechar</button>
+    </div>
+    <div class="finance-tabs" role="tablist" aria-label="Tipo de lançamento">
+      <button type="button" class="btn small" id="finance-expenses-tab" role="tab" aria-controls="finance-expenses" aria-pressed="true">Gastos</button>
+      <button type="button" class="btn small" id="finance-income-tab" role="tab" aria-controls="finance-income" aria-pressed="false">Ganhos por produto</button>
+    </div>
+    <div class="finance-panel" id="finance-expenses" role="tabpanel">
+      <section class="block">
+        <h2>Gastos</h2>
+        <p class="hint">Cada compra ou despesa entra com data, categoria e valor. Registrar um gasto aqui não altera a quantidade em estoque.</p>
+        <div class="card xcard" id="x-form">
+          <div class="fields">
+            <label class="f"><span>Data</span><input type="date" id="x-date"></label>
+            <label class="f"><span>Categoria</span><select id="x-cat"></select></label>
+            <label class="f" id="x-stock-wrap"><span>Do estoque (opcional)</span><select id="x-stock"></select></label>
+            <label class="f"><span>Descrição</span><input type="text" id="x-desc" maxlength="80" placeholder="Rolo de PLA preto"></label>
+            <label class="f"><span>Valor (R$)</span><input type="number" inputmode="decimal" min="0" step="any" id="x-amount" placeholder="0,00"></label>
+            <div class="btn-row">
+              <button type="button" class="btn primary" id="x-save">Registrar gasto</button>
+              <button type="button" class="btn" id="x-cancel" hidden>Cancelar edição</button>
+            </div>
+          </div>
+          <p class="note" id="x-note" role="status"></p>
+        </div>
+        <div class="xlist" id="x-list"></div>
+      </section>
+    </div>
+    <div class="finance-panel" id="finance-income" role="tabpanel" hidden>
+      <section class="block">
+        <h2>Ganhos por produto</h2>
+        <p class="hint">Informe quanto cada produto rendeu e a data do recebimento. É o mesmo valor do campo “Quanto o cliente pagou” dentro do produto.</p>
+        <div id="dash-income"></div>
+      </section>
+    </div>
+  </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -2843,6 +2877,31 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     return EXP_CATS[EXP_CATS.length - 1];
   }
   var dash = { range: "6", editId: null };
+  var financeOpen = false, financeLastFocus = null, financeTab = "expenses";
+  function setFinanceTab(tab) {
+    financeTab = tab === "income" ? "income" : "expenses";
+    $("#finance-expenses").hidden = financeTab !== "expenses";
+    $("#finance-income").hidden = financeTab !== "income";
+    $("#finance-expenses-tab").setAttribute("aria-pressed", financeTab === "expenses" ? "true" : "false");
+    $("#finance-income-tab").setAttribute("aria-pressed", financeTab === "income" ? "true" : "false");
+  }
+  function openFinance(tab) {
+    var box = $("#finance-modal"), shell = $(".shell");
+    if (!box) return;
+    financeLastFocus = document.activeElement;
+    financeOpen = true; setFinanceTab(tab || financeTab);
+    document.body.classList.add("modal-open"); if (shell) shell.inert = true;
+    box.hidden = false;
+    var focus = financeTab === "expenses" ? $("#x-date") : $("#finance-income-tab");
+    if (focus) focus.focus();
+  }
+  function closeFinance() {
+    var box = $("#finance-modal"), shell = $(".shell");
+    if (!financeOpen || !box) return;
+    financeOpen = false; box.hidden = true;
+    if (!inviteOpen) { document.body.classList.remove("modal-open"); if (shell) shell.inert = false; }
+    if (financeLastFocus && financeLastFocus.focus) { try { financeLastFocus.focus(); } catch (e) {} }
+  }
   function pad2(x) { return (x < 10 ? "0" : "") + x; }
   function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
   function todayStr() { return ymd(new Date()); }
@@ -3144,6 +3203,12 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     rszTimer = setTimeout(function () { if (ui.view === "dashboard") renderDashSummary(); }, 150);
   });
   $("#dash-range").addEventListener("change", function (e) { dash.range = e.target.value; renderDashSummary(); renderExpList(); });
+  $("#open-finance").addEventListener("click", function () { openFinance("expenses"); });
+  $("#close-finance").addEventListener("click", closeFinance);
+  $("#finance-expenses-tab").addEventListener("click", function () { setFinanceTab("expenses"); });
+  $("#finance-income-tab").addEventListener("click", function () { setFinanceTab("income"); });
+  $("#finance-modal").addEventListener("click", function (e) { if (e.target === e.currentTarget) closeFinance(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && financeOpen) closeFinance(); });
   $("#x-cat").addEventListener("change", fillXStock);
   $("#x-stock").addEventListener("change", function (e) {
     var it = e.target.value ? invById(e.target.value) : null; if (!it) return;
