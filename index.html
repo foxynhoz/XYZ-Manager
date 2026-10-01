@@ -171,6 +171,21 @@
     font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em;
     margin: 0 0 4px;
   }
+  .heading-help { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .help-btn {
+    position: relative; display: inline-grid; place-items: center; width: 20px; height: 20px; padding: 0;
+    border: 1px solid var(--line); border-radius: 50%; color: var(--muted); background: transparent;
+    font: 700 0.78rem/1 var(--font-body); cursor: help;
+  }
+  .help-btn:hover, .help-btn:focus-visible { color: var(--accent); border-color: var(--accent); outline: none; }
+  .help-btn::after {
+    content: attr(data-tip); position: absolute; z-index: 60; left: 50%; top: calc(100% + 9px);
+    width: min(330px, calc(100vw - 48px)); transform: translateX(-50%); padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 9px; background: var(--total-bg); color: var(--total-ink);
+    box-shadow: 0 10px 28px rgba(0,0,0,.22); font: 400 0.84rem/1.4 var(--font-body); text-align: left;
+    letter-spacing: normal; white-space: normal; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .15s ease;
+  }
+  .help-btn:hover::after, .help-btn:focus-visible::after { opacity: 1; visibility: visible; }
   .hint { margin: 0 0 14px; color: var(--muted); font-size: 0.9rem; max-width: 62ch; }
 
   .row {
@@ -662,6 +677,8 @@
   .inrow .pname { text-align: left; align-self: center; overflow-wrap: anywhere; }
   .inrow output { display: flex; align-items: center; min-height: 44px; font-weight: 600; font-variant-numeric: tabular-nums; }
   .dash-actions { margin-top: 18px; }
+  .stock-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 22px; }
+  .stock-tabs .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
   .finance-dialog {
     width: min(1060px, 100%); max-height: min(820px, calc(100vh - 40px)); overflow: auto;
     align-items: stretch; text-align: left; justify-items: stretch;
@@ -902,21 +919,30 @@
         </div>
       </header>
 
-      <section class="block">
-        <h2>Filamentos</h2>
-        <p class="hint">A barra mostra o estoque atual em relação ao peso do rolo (100%). Use o lápis para editar cor, tipo, preço, peso e estoque. As alterações só são gravadas ao clicar em Salvar.</p>
-        <div class="flist" id="inv-fil"></div>
-        <div class="empty-state" id="inv-fil-empty">Nenhum filamento cadastrado.</div>
-        <button type="button" class="btn add" id="inv-add-fil">Cadastrar filamento</button>
-      </section>
+      <div class="stock-tabs" role="tablist" aria-label="Tipo de estoque">
+        <button type="button" class="btn" id="stock-filaments-tab" role="tab" aria-controls="stock-filaments" aria-pressed="true">Filamentos</button>
+        <button type="button" class="btn" id="stock-materials-tab" role="tab" aria-controls="stock-materials" aria-pressed="false">Materiais</button>
+      </div>
 
-      <section class="block">
-        <h2>Materiais</h2>
-        <p class="hint">Ímãs, parafusos, tinta, cola, caixas, plástico bolha e o que mais você compra. O valor é por unidade da medida que você escolher (un, m, ml). As alterações só são gravadas ao clicar em Salvar.</p>
-        <div id="inv-mat"></div>
-        <div class="empty-state" id="inv-mat-empty">Nenhum material cadastrado.</div>
-        <button type="button" class="btn add" id="inv-add-mat">Cadastrar material</button>
-      </section>
+      <div id="stock-filaments" role="tabpanel">
+        <section class="block">
+          <h2>Filamentos</h2>
+          <p class="hint">A barra mostra o estoque atual em relação ao peso do rolo (100%). Use o lápis para editar cor, tipo, preço, peso e estoque. As alterações só são gravadas ao clicar em Salvar.</p>
+          <div class="flist" id="inv-fil"></div>
+          <div class="empty-state" id="inv-fil-empty">Nenhum filamento cadastrado.</div>
+          <button type="button" class="btn add" id="inv-add-fil">Cadastrar filamento</button>
+        </section>
+      </div>
+
+      <div id="stock-materials" role="tabpanel" hidden>
+        <section class="block">
+          <h2>Materiais</h2>
+          <p class="hint">Ímãs, parafusos, tinta, cola, caixas, plástico bolha e o que mais você compra. O valor é por unidade da medida que você escolher (un, m, ml). As alterações só são gravadas ao clicar em Salvar.</p>
+          <div id="inv-mat"></div>
+          <div class="empty-state" id="inv-mat-empty">Nenhum material cadastrado.</div>
+          <button type="button" class="btn add" id="inv-add-mat">Cadastrar material</button>
+        </section>
+      </div>
 
       <p class="hint">Remover um item do estoque não muda produtos já salvos: cada peça guarda o nome, o preço e a quantidade usados na hora em que foi salva. Remover uma peça ou um produto também não devolve o material ao estoque.</p>
     </div>
@@ -1155,6 +1181,17 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
     });
     return el;
+  }
+  function compactDescriptions(root) {
+    $$('h1, h2, h3', root || document).forEach(function (heading) {
+      if (heading.dataset.helpReady) return;
+      var desc = heading.nextElementSibling;
+      if (!desc || desc.tagName !== "P" || !desc.textContent.trim()) return;
+      var text = desc.textContent.trim();
+      var help = h("button", { type: "button", class: "help-btn", text: "?", "aria-label": text, "data-tip": text, title: text });
+      heading.classList.add("heading-help"); heading.appendChild(help);
+      heading.dataset.helpReady = "true"; desc.hidden = true;
+    });
   }
   function field(label, input, cls) { return h("label", { class: "f " + (cls || "") }, [h("span", { text: label }), input]); }
   function twoStep(btn, action, confirmLabel) {
@@ -2152,9 +2189,10 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     var a = document.activeElement;
     if (a && a.tagName === "INPUT" && !a.readOnly && box.contains(a)) return;
     box.innerHTML = "";
-    if (!currentUser) { box.appendChild(signedOutCard()); return; }
-    if (!teams.length) { box.appendChild(createTeamCard()); return; }
+    if (!currentUser) { box.appendChild(signedOutCard()); compactDescriptions(box); return; }
+    if (!teams.length) { box.appendChild(createTeamCard()); compactDescriptions(box); return; }
     box.appendChild(teamPanel());
+    compactDescriptions(box);
   }
 
   $("#google-login").addEventListener("click", loginGoogle);
@@ -2193,6 +2231,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     if (v === "estoque") renderInventory();
     if (v === "dashboard") renderDashboard();
     if (v === "equipe") renderTeam();
+    compactDescriptions();
     window.scrollTo(0, 0);
   }
   function openProduct(id) { ui.openId = id; showView("produtos"); }
@@ -2506,6 +2545,14 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
 
   /* ---------- tela de estoque ---------- */
   function kgPrice(it) { return it.weight > 0 ? (it.price / it.weight) * 1000 : 0; }
+  var stockTab = "filaments";
+  function setStockTab(tab) {
+    stockTab = tab === "materials" ? "materials" : "filaments";
+    $("#stock-filaments").hidden = stockTab !== "filaments";
+    $("#stock-materials").hidden = stockTab !== "materials";
+    $("#stock-filaments-tab").setAttribute("aria-pressed", stockTab === "filaments" ? "true" : "false");
+    $("#stock-materials-tab").setAttribute("aria-pressed", stockTab === "materials" ? "true" : "false");
+  }
 
   /* Alterações ficam em rascunho até o clique em "Salvar": só então há gravação no Firebase */
   var invDrafts = {};   // id -> { data, base, isNew }
@@ -2690,6 +2737,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     } else {
       it = { id: uid(), type: type, name: "", price: 0, stock: 0, unit: "un" };
     }
+    setStockTab(type === "filamento" ? "filaments" : "materials");
     startDraft(it, true);   // só entra no estoque (e no Firebase) quando você clicar em Salvar
     renderInventory();
     if (type === "filamento") {
@@ -2698,6 +2746,8 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
       var rows = $$("#inv-mat .row"); if (rows.length) rows[rows.length - 1].querySelector("input").focus();
     }
   }
+  $("#stock-filaments-tab").addEventListener("click", function () { setStockTab("filaments"); });
+  $("#stock-materials-tab").addEventListener("click", function () { setStockTab("materials"); });
   $("#inv-add-fil").addEventListener("click", function () { addInv("filamento"); });
   $("#inv-add-mat").addEventListener("click", function () { addInv("material"); });
 
