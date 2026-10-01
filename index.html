@@ -129,6 +129,8 @@
   .gz-origin { fill: var(--ink); }
   .row.dirty { box-shadow: inset 3px 0 0 var(--accent); padding-left: 12px; }
   .nav { display: flex; flex-direction: column; gap: 4px; }
+  .language-picker { padding: 0 8px; }
+  .language-picker select { min-height: 38px; padding: 7px 9px; font-size: 0.84rem; }
   .nav-item {
     position: relative;
     display: flex; align-items: center; gap: 12px; width: 100%;
@@ -591,6 +593,8 @@
       overflow-x: auto;
     }
     .brand { display: none; }
+    .language-picker { padding: 0; }
+    .language-picker select { width: auto; min-height: 38px; }
     .nav { flex-direction: row; gap: 4px; }
     .nav-item { width: auto; padding: 8px 14px; white-space: nowrap; }
     .nav-item[aria-current="page"]::before {
@@ -623,6 +627,10 @@
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) input[type="date"] { color-scheme: dark; } }
   :root[data-theme="dark"] input[type="date"] { color-scheme: dark; }
   .dash-range { min-width: 180px; }
+  .dash-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 22px; }
+  .dash-tabs .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .dash-section-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+  .dash-section-head h2 { margin-bottom: 0; }
   .dash-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 14px; }
   .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
   .stat .label { margin: 0; color: var(--muted); font-size: 0.88rem; display: flex; align-items: center; gap: 8px; }
@@ -696,6 +704,8 @@
     .inrow { grid-template-columns: 1fr 1fr; }
     .inrow .pname { grid-column: 1 / -1; }
     .finance-dialog { padding: 22px 18px; }
+    .dash-section-head { align-items: stretch; flex-direction: column; }
+    .dash-range { min-width: 0; }
   }
 </style>
 </head>
@@ -710,6 +720,12 @@
         <circle cx="13" cy="15" r="1.9" class="gz-origin"/>
       </svg>
       <span class="brand-name"><span class="ax-x">X</span><span class="ax-y">Y</span><span class="ax-z">Z</span> Manager</span>
+    </div>
+    <div class="language-picker">
+      <select id="language-select" aria-label="Idioma">
+        <option value="pt-BR">🇧🇷 PT-BR</option>
+        <option value="en">🇺🇸 ENG</option>
+      </select>
     </div>
     <div class="nav">
       <button type="button" class="nav-item" data-go="inicio">
@@ -950,43 +966,49 @@
     <!-- DASHBOARD -->
     <div class="view" id="view-dashboard" hidden>
       <p class="save-status" role="status"></p>
-      <header class="top">
-        <div>
-          <h1>Dashboard</h1>
-          <p>Registre os gastos com filamentos e materiais e o ganho de cada produto. O resultado e o gráfico usam os dois.</p>
-        </div>
-        <label class="f dash-range"><span>Período</span>
-          <select id="dash-range">
-            <option value="6">Últimos 6 meses</option>
-            <option value="12">Últimos 12 meses</option>
-            <option value="ano">Este ano</option>
-            <option value="tudo">Tudo</option>
-          </select>
-        </label>
-      </header>
+      <header class="top"><div><h1>Dashboard</h1><p>Registre os gastos com filamentos e materiais e o ganho de cada produto. O resultado e o gráfico usam os dois.</p></div></header>
 
       <div class="dash-cards" id="dash-cards"></div>
       <p class="dash-note" id="dash-note"></p>
 
-      <section class="block">
-        <h2>Ganhos e gastos por mês</h2>
-        <p class="hint">As barras mostram o que entrou e o que saiu em cada mês. A linha é o resultado do mês (ganhos menos gastos). Passe o mouse ou toque em um mês para ver os valores.</p>
-        <div class="chart-wrap" id="dash-chart"></div>
-        <div class="legend" aria-hidden="true">
-          <span><i style="background: var(--c-fil)"></i>Ganhos</span>
-          <span><i style="background: var(--c-waste)"></i>Gastos</span>
-          <span><i class="ln"></i>Resultado</span>
-        </div>
-      </section>
+      <div class="dash-tabs" role="tablist" aria-label="Visualização do dashboard">
+        <button type="button" class="btn" id="dash-chart-tab" role="tab" aria-controls="dash-chart-panel" aria-pressed="true">Gráfico</button>
+        <button type="button" class="btn" id="dash-summary-tab" role="tab" aria-controls="dash-summary-panel" aria-pressed="false">Resumo</button>
+      </div>
 
-      <section class="block">
-        <h2>Para onde vai o dinheiro</h2>
-        <p class="hint">Gastos do período por categoria e por item.</p>
-        <div class="dash-split">
-          <div><h3>Por categoria</h3><div id="dash-cats"></div></div>
-          <div><h3>Por filamento e material</h3><div id="dash-items"></div></div>
-        </div>
-      </section>
+      <div id="dash-chart-panel" role="tabpanel">
+        <section class="block">
+          <div class="dash-section-head">
+            <h2>Ganhos e gastos por mês</h2>
+            <label class="f dash-range"><span>Período</span>
+              <select id="dash-range">
+                <option value="6">Últimos 6 meses</option>
+                <option value="12">Últimos 12 meses</option>
+                <option value="ano">Este ano</option>
+                <option value="tudo">Tudo</option>
+              </select>
+            </label>
+          </div>
+          <p class="hint">As barras mostram o que entrou e o que saiu em cada mês. A linha é o resultado do mês (ganhos menos gastos). Passe o mouse ou toque em um mês para ver os valores.</p>
+          <div class="chart-wrap" id="dash-chart"></div>
+          <div class="legend" aria-hidden="true">
+            <span><i style="background: var(--c-fil)"></i>Ganhos</span>
+            <span><i style="background: var(--c-waste)"></i>Gastos</span>
+            <span><i class="ln"></i>Resultado</span>
+          </div>
+        </section>
+      </div>
+
+      <div id="dash-summary-panel" role="tabpanel" hidden>
+        <section class="block">
+          <h2>Para onde vai o dinheiro</h2>
+          <p class="hint">Gastos do período por categoria e por item.</p>
+          <div class="dash-split">
+            <div><h3>Por categoria</h3><div id="dash-cats"></div></div>
+            <div><h3>Por filamento e material</h3><div id="dash-items"></div></div>
+          </div>
+        </section>
+      </div>
 
       <section class="block dash-actions">
         <h2>Lançamentos</h2>
@@ -1154,6 +1176,22 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   /* ---------- utilitários ---------- */
   var brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
   var nf1 = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+  var LANG_KEY = "xyz-manager-language";
+  var appLang = localStorage.getItem(LANG_KEY) === "en" ? "en" : "pt-BR";
+  var EN = {
+    "Idioma":"Language", "Início":"Home", "Calculadora":"Calculator", "Produtos":"Products", "Estoque":"Inventory", "Equipe":"Team",
+    "Custo de impressão 3D":"3D printing cost", "Limpar peça":"Clear part", "Peça":"Part", "Filamento":"Filament", "Filamentos":"Filaments", "Outros materiais":"Other materials", "Materiais":"Materials", "Energia":"Energy", "Ajustes":"Settings", "Salvar em um produto":"Save to a product",
+    "Nome da peça":"Part name", "Do estoque":"From inventory", "Nome ou cor":"Name or color", "Preço do rolo (R$)":"Spool price (R$)", "Peso do rolo (g)":"Spool weight (g)", "Gramas usadas":"Grams used", "Item":"Item", "Quantidade":"Quantity", "Valor unitário (R$)":"Unit price (R$)", "Impressora":"Printer", "Potência média (W)":"Average power (W)", "Horas":"Hours", "Minutos":"Minutes", "Preço do kWh (R$)":"kWh price (R$)", "Quantidade de unidades":"Number of units", "Desperdício e falhas (%)":"Waste and failures (%)", "Margem de lucro (%)":"Profit margin (%)",
+    "Valor bruto":"Gross cost", "Custo por unidade":"Cost per unit", "Total das unidades":"Total for all units", "Preço de venda sugerido":"Suggested selling price", "Produto":"Product", "Nome do novo produto":"New product name", "Salvar peça no produto":"Save part to product", "Cancelar edição":"Cancel editing",
+    "Estoque atual":"Current stock", "Cadastrar filamento":"Add filament", "Cadastrar material":"Add material", "Status e tags":"Status and tags", "Nova tag":"New tag", "Adicionar tag":"Add tag", "Peças impressas":"Printed parts", "Adicionar peça pela calculadora":"Add part with calculator", "Embalagem e envio":"Packaging and shipping", "Adicionar item de embalagem":"Add packaging item", "Valor cobrado":"Amount charged", "Data do recebimento":"Payment date", "Lucro":"Profit", "Lucro estimado":"Estimated profit", "Custo calculado":"Calculated cost", "Custo total do produto":"Total product cost", "Filamento usado":"Filament used", "Tempo de impressão":"Print time",
+    "Novo produto":"New product", "Nome do produto":"Product name", "Criar produto":"Create product", "Voltar para todos os produtos":"Back to all products", "Enviar imagem":"Upload image", "Colar imagem":"Paste image", "Remover imagem":"Remove image", "Excluir produto":"Delete product",
+    "Dashboard":"Dashboard", "Gráfico":"Chart", "Resumo":"Summary", "Ganhos e gastos por mês":"Monthly income and expenses", "Período":"Period", "Últimos 6 meses":"Last 6 months", "Últimos 12 meses":"Last 12 months", "Este ano":"This year", "Tudo":"All time", "Ganhos":"Income", "Gastos":"Expenses", "Resultado":"Result", "Para onde vai o dinheiro":"Where the money goes", "Por categoria":"By category", "Por filamento e material":"By filament and material", "Lançamentos":"Entries", "Gerenciar gastos e ganhos":"Manage expenses and income",
+    "Gastos e ganhos":"Expenses and income", "Fechar":"Close", "Ganhos por produto":"Product income", "Data":"Date", "Categoria":"Category", "Descrição":"Description", "Valor (R$)":"Amount (R$)", "Registrar gasto":"Add expense", "Salvar alterações":"Save changes", "Cancelar":"Cancel", "Editar":"Edit", "Excluir":"Delete", "Remover":"Remove", "Salvar":"Save", "Confirmar exclusão":"Confirm deletion", "Confirmar saída":"Confirm departure",
+    "Entrar com Google":"Sign in with Google", "Trocar de conta":"Switch account", "Sair":"Sign out", "Criar equipe":"Create team", "Membros":"Members", "Convidar pessoas":"Invite people", "Gerar link de convite":"Create invite link", "Copiar":"Copy", "Revogar":"Revoke", "Recusar":"Decline", "Abrir equipe":"Open team", "Meus dados pessoais":"My personal data", "Dados da equipe":"Team data",
+    "Adicionar foto":"Add photo", "Remover peça":"Remove part", "Editar na calculadora":"Edit in calculator", "Adicionar material":"Add material", "Adicionar filamento":"Add filament", "Registrar gasto":"Add expense", "Gasto salvo.":"Expense saved.", "Gasto atualizado.":"Expense updated.", "Gasto excluído.":"Expense deleted.", "Tag atualizada.":"Tag updated.", "Imagem salva.":"Image saved.", "Imagem removida.":"Image removed.", "Nenhum produto ainda.":"No products yet.", "Nenhum gasto no período.":"No expenses in this period.", "Nenhum gasto registrado no período.":"No expenses recorded in this period."
+    ,"Suas ferramentas de impressão 3D ficam na barra lateral. Novas abas aparecem ali conforme forem sendo criadas.":"Your 3D printing tools are in the sidebar. New tabs appear there as they are created.", "Preencha os dados de uma peça. O valor bruto é calculado enquanto você digita.":"Fill in the part details. The gross cost is calculated as you type.", "Cadastre filamentos e materiais com preço e quantidade. Eles aparecem nos dropdowns da calculadora e da embalagem; a baixa acontece quando o produto é marcado como Impresso.":"Add filaments and materials with price and quantity. They appear in calculator and packaging lists; stock is deducted when the product is marked as Printed.", "Registre os gastos com filamentos e materiais e o ganho de cada produto. O resultado e o gráfico usam os dois.":"Track filament and material expenses and income from each product. Both are used in the result and chart.", "Um produto é um pedido ou venda. Dentro dele ficam as peças impressas e a embalagem.":"A product is an order or sale. It contains printed parts and packaging.", "Convide pessoas para ver e editar os mesmos produtos e o mesmo estoque, em tempo real.":"Invite people to view and edit the same products and inventory in real time.", "Use as gramas que o fatiador mostra para uma unidade. Se a peça usa mais de uma cor ou material, adicione uma linha para cada.":"Use the grams shown by the slicer for one unit. If the part uses more than one color or material, add a line for each one.", "A barra mostra o estoque atual em relação ao peso do rolo (100%). Use o lápis para editar cor, tipo, preço, peso e estoque. As alterações só são gravadas ao clicar em Salvar.":"The bar shows current stock relative to spool weight (100%). Use the pencil to edit color, type, price, weight and stock. Changes are saved only when you click Save.", "Ímãs, parafusos, tinta, cola, caixas, plástico bolha e o que mais você compra. O valor é por unidade da medida que você escolher (un, m, ml). As alterações só são gravadas ao clicar em Salvar.":"Magnets, screws, paint, glue, boxes, bubble wrap and anything else you buy. The price is per unit of the measurement you choose. Changes are saved only when you click Save."
+  };
+  function t(value) { return appLang === "en" && typeof value === "string" ? (EN[value] || value) : value; }
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var n = function (v) { var x = parseFloat(v); return isFinite(x) && x > 0 ? x : 0; };
@@ -1171,14 +1209,14 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     if (props) Object.keys(props).forEach(function (k) {
       var v = props[k];
       if (k === "class") el.className = v;
-      else if (k === "text") el.textContent = v;
+      else if (k === "text") el.textContent = t(v);
       else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2), v);
       else if (v === true) el.setAttribute(k, "");
       else if (v !== false && v != null) el.setAttribute(k, v);
     });
     (kids || []).forEach(function (c) {
       if (c == null || c === false) return;
-      el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+      el.appendChild(typeof c === "string" ? document.createTextNode(t(c)) : c);
     });
     return el;
   }
@@ -1186,12 +1224,50 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     $$('h1, h2, h3', root || document).forEach(function (heading) {
       if (heading.dataset.helpReady) return;
       var desc = heading.nextElementSibling;
+      if ((!desc || desc.tagName !== "P") && heading.parentElement && heading.parentElement.classList.contains("dash-section-head")) desc = heading.parentElement.nextElementSibling;
       if (!desc || desc.tagName !== "P" || !desc.textContent.trim()) return;
       var text = desc.textContent.trim();
       var help = h("button", { type: "button", class: "help-btn", text: "?", "aria-label": text, "data-tip": text, title: text });
       heading.classList.add("heading-help"); heading.appendChild(help);
       heading.dataset.helpReady = "true"; desc.hidden = true;
     });
+  }
+  function translateTree(root) {
+    if (appLang !== "en" || !root) return;
+    var nodes = [];
+    if (root.nodeType === 3) nodes.push(root);
+    else {
+      var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+    }
+    nodes.forEach(function (node) {
+      var parent = node.parentElement;
+      if (!parent || /^(SCRIPT|STYLE|OPTION)$/i.test(parent.tagName)) return;
+      var raw = node.nodeValue, m = /^(\s*)([\s\S]*?)(\s*)$/.exec(raw), translated = m && t(m[2]);
+      if (translated && translated !== m[2]) node.nodeValue = m[1] + translated + m[3];
+    });
+    if (root.nodeType !== 3 && root.querySelectorAll) root.querySelectorAll("[placeholder],[title],[aria-label]").forEach(function (el) {
+      ["placeholder", "title", "aria-label"].forEach(function (name) {
+        var value = el.getAttribute(name), translated = t(value);
+        if (value && translated !== value) el.setAttribute(name, translated);
+      });
+    });
+  }
+  function initLanguage() {
+    var select = $("#language-select");
+    if (!select) return;
+    select.value = appLang; document.documentElement.lang = appLang;
+    select.addEventListener("change", function () {
+      localStorage.setItem(LANG_KEY, select.value === "en" ? "en" : "pt-BR");
+      location.reload();
+    });
+    translateTree(document.body);
+    if (appLang === "en") new MutationObserver(function (mutations) {
+      mutations.forEach(function (m) {
+        if (m.type === "characterData") translateTree(m.target);
+        else m.addedNodes.forEach(function (node) { if (node.nodeType === 1 || node.nodeType === 3) translateTree(node); });
+      });
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
   }
   function field(label, input, cls) { return h("label", { class: "f " + (cls || "") }, [h("span", { text: label }), input]); }
   function twoStep(btn, action, confirmLabel) {
@@ -2927,6 +3003,15 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     return EXP_CATS[EXP_CATS.length - 1];
   }
   var dash = { range: "6", editId: null };
+  var dashTab = "chart";
+  function setDashTab(tab) {
+    dashTab = tab === "summary" ? "summary" : "chart";
+    $("#dash-chart-panel").hidden = dashTab !== "chart";
+    $("#dash-summary-panel").hidden = dashTab !== "summary";
+    $("#dash-chart-tab").setAttribute("aria-pressed", dashTab === "chart" ? "true" : "false");
+    $("#dash-summary-tab").setAttribute("aria-pressed", dashTab === "summary" ? "true" : "false");
+    if (dashTab === "chart" && ui.view === "dashboard") renderDashSummary();
+  }
   var financeOpen = false, financeLastFocus = null, financeTab = "expenses";
   function setFinanceTab(tab) {
     financeTab = tab === "income" ? "income" : "expenses";
@@ -3253,6 +3338,8 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
     rszTimer = setTimeout(function () { if (ui.view === "dashboard") renderDashSummary(); }, 150);
   });
   $("#dash-range").addEventListener("change", function (e) { dash.range = e.target.value; renderDashSummary(); renderExpList(); });
+  $("#dash-chart-tab").addEventListener("click", function () { setDashTab("chart"); });
+  $("#dash-summary-tab").addEventListener("click", function () { setDashTab("summary"); });
   $("#open-finance").addEventListener("click", function () { openFinance("expenses"); });
   $("#close-finance").addEventListener("click", closeFinance);
   $("#finance-expenses-tab").addEventListener("click", function () { setFinanceTab("expenses"); });
@@ -3273,6 +3360,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
   initXForm();
 
   /* ---------- início ---------- */
+  initLanguage();
   populatePrinters();
   restoreSettings();
   addFil();
