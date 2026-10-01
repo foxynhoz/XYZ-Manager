@@ -1,18 +1,22 @@
-const CACHE_NAME = "xyz-manager-v2";
+const CACHE_NAME = "xyz-manager-v3";
 
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./css/style.css",
+  "./js/main.js",
+  "./js/firebase.js",
+  "./js/i18n.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png"
 ];
 
-// Instala o Service Worker e guarda os arquivos básicos
+// Guarda cada arquivo separadamente: se um deles faltar (ex.: um ícone), o resto continua sendo guardado.
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      .then((cache) => Promise.all(APP_SHELL.map((file) => cache.add(file).catch(() => null))))
       .then(() => self.skipWaiting())
   );
 });
@@ -32,8 +36,8 @@ self.addEventListener("activate", (event) => {
 
 // Rede primeiro; se estiver offline, usa o cache.
 // Só guarda arquivos do próprio site e os scripts do Firebase (gstatic).
-// As chamadas ao Firestore/Auth (inclusive as conexões longas do onSnapshot)
-// passam direto, sem cache.
+// As chamadas ao Firestore/Auth passam direto, sem cache.
+// Links de convite (?convite=...) nunca vão para o cache, porque carregam o token.
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") {
@@ -46,11 +50,12 @@ self.addEventListener("fetch", (event) => {
   if (!mesmoSite && !scriptFirebase) {
     return;
   }
+  const temConvite = url.searchParams.has("convite");
 
   event.respondWith(
     fetch(request)
       .then((response) => {
-        if (response && response.ok) {
+        if (response && response.ok && !temConvite) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseClone);
@@ -59,7 +64,7 @@ self.addEventListener("fetch", (event) => {
         return response;
       })
       .catch(() => {
-        return caches.match(request);
+        return caches.match(request, { ignoreSearch: temConvite });
       })
   );
 });
