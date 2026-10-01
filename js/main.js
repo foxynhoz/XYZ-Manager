@@ -2,14 +2,14 @@ import {
   auth, db, googleProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence,
   collection, doc, setDoc, deleteDoc, getDoc, onSnapshot, writeBatch
 } from "./firebase.js";
-import { t, appLang, initLanguage, translateTree } from "./i18n.js";
+import { t, tr, appLang, initLanguage, translateTree } from "./i18n.js";
 
 (function () {
   "use strict";
 
   /* ---------- utilitários ---------- */
-  var brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-  var nf1 = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+  var brl = new Intl.NumberFormat(appLang === "en" ? "en-US" : "pt-BR", { style: "currency", currency: "BRL" });
+  var nf1 = new Intl.NumberFormat(appLang === "en" ? "en-US" : "pt-BR", { maximumFractionDigits: 1 });
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var n = function (v) { var x = parseFloat(v); return isFinite(x) && x > 0 ? x : 0; };
@@ -449,15 +449,15 @@ import { t, appLang, initLanguage, translateTree } from "./i18n.js";
     }
   }
   function stockText(i) {
-    return nf1.format(i.stock || 0) + (i.type === "filamento" ? " g" : " " + (i.unit || "un")) + " em estoque";
+    return nf1.format(i.stock || 0) + (i.type === "filamento" ? " g" : " " + (i.unit || "un")) + " " + tr("em estoque");
   }
   function fillStockSelect(sel, type) {
     var prev = sel.value; sel.innerHTML = "";
-    var add = function (v, t) { var o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); };
+    var add = function (v, txt, user) { var o = document.createElement("option"); o.value = v; o.textContent = txt; if (user) o.setAttribute("data-user", ""); sel.appendChild(o); };
     var items = inventory.filter(function (i) { return i.type === type; })
       .sort(function (a, b) { return (a.name || "").localeCompare(b.name || "", "pt-BR"); });
     add("", items.length ? "Digitar manualmente" : "Digitar manualmente (estoque vazio)");
-    items.forEach(function (i) { add(i.id, (i.name || "Sem nome") + ", " + stockText(i)); });
+    items.forEach(function (i) { add(i.id, (i.name || tr("Sem nome")) + ", " + stockText(i), true); });
     sel.value = items.some(function (i) { return i.id === prev; }) ? prev : "";
   }
   function refreshStockSelects() {
@@ -1034,7 +1034,7 @@ import { t, appLang, initLanguage, translateTree } from "./i18n.js";
     var me = currentUser.uid;
     var kids = [avatar(m),
       h("span", { class: "mrow-main" }, [
-        h("span", { class: "mrow-name", text: (m.name || m.email || "Sem nome") + (m.uid === me ? " (você)" : ""), user: true }),
+        h("span", { class: "mrow-name", text: (m.name || m.email || tr("Sem nome")) + (m.uid === me ? " (" + tr("você") + ")" : ""), user: true }),
         h("span", { class: "mrow-meta", text: m.email || "", user: true })
       ]),
       badge(m.role)];
@@ -1055,7 +1055,7 @@ import { t, appLang, initLanguage, translateTree } from "./i18n.js";
         h("button", { type: "button", class: "btn small", text: "Copiar", onclick: function () { copyText(link, input); } }),
         h("button", { type: "button", class: "btn danger small", text: "Revogar", onclick: function () { revokeInvite(t, i.token); } })
       ]),
-      h("span", { class: "mrow-meta", text: "Expira em " + new Date(i.expiresAt).toLocaleDateString("pt-BR") })
+      h("span", { class: "mrow-meta", text: "Expira em " + new Date(i.expiresAt).toLocaleDateString(appLang === "en" ? "en-US" : "pt-BR") })
     ]);
   }
   function teamPanel() {
@@ -1067,7 +1067,7 @@ import { t, appLang, initLanguage, translateTree } from "./i18n.js";
     var head = [h("div", { class: "team-head" }, [h("h2", { text: t.name, user: true }), badge(t.role)])];
     if (teams.length > 1) {
       var sel = h("select", { "aria-label": "Equipe", onchange: function (e) { viewTeamId = e.target.value; watchTeam(); renderTeam(); } },
-        teams.map(function (x) { return h("option", { value: x.id, text: x.name, selected: x.id === t.id }); }));
+        teams.map(function (x) { return h("option", { value: x.id, text: x.name, user: true, selected: x.id === t.id }); }));
       head.push(field("Equipe", sel));
     }
     head.push(h("p", { class: "hint", text: "Escolha quais dados aparecem em Produtos, Estoque e na calculadora." }));
@@ -1162,9 +1162,9 @@ import { t, appLang, initLanguage, translateTree } from "./i18n.js";
   function updateSaveTargets() {
     var sel = $("#save-target"), prev = sel.value;
     sel.innerHTML = "";
-    var add = function (v, t) { var o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); };
+    var add = function (v, txt, user) { var o = document.createElement("option"); o.value = v; o.textContent = txt; if (user) o.setAttribute("data-user", ""); sel.appendChild(o); };
     if (products.length) add("", "Escolha um produto");
-    products.forEach(function (p) { add(p.id, p.name || "Produto sem nome"); });
+    products.forEach(function (p) { add(p.id, p.name || tr("Produto sem nome"), true); });
     add("__new__", "Novo produto…");
     var want = ui.addTo || prev;
     var ok = $$("option", sel).some(function (o) { return o.value === want; });
@@ -1898,17 +1898,17 @@ import { t, appLang, initLanguage, translateTree } from "./i18n.js";
   function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
   function todayStr() { return ymd(new Date()); }
   function validDate(s) { return /^\d{4}-\d{2}-\d{2}$/.test(s || ""); }
-  function fmtDate(s) { return validDate(s) ? s.slice(8, 10) + "/" + s.slice(5, 7) + "/" + s.slice(0, 4) : ""; }
+  function fmtDate(s) { return !validDate(s) ? "" : appLang === "en" ? s.slice(5, 7) + "/" + s.slice(8, 10) + "/" + s.slice(0, 4) : s.slice(8, 10) + "/" + s.slice(5, 7) + "/" + s.slice(0, 4); }
   function incomeDate(p) { return validDate(p.chargedAt) ? p.chargedAt : ymd(new Date(p.createdAt || p.updatedAt || Date.now())); }
   function r2(x) { return Math.round(x * 100) / 100; }
   function monthLabel(key) {
     var y = +key.slice(0, 4), m = +key.slice(5, 7);
-    var s = new Date(y, m - 1, 1).toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
+    var s = new Date(y, m - 1, 1).toLocaleDateString(appLang === "en" ? "en-US" : "pt-BR", { month: "short" }).replace(".", "");
     return s + "/" + String(y).slice(2);
   }
   function moneyShort(v) {
     var a = Math.abs(v), s = v < 0 ? "-" : "";
-    return a >= 1000 ? s + "R$ " + nf1.format(a / 1000) + " mil" : s + "R$ " + Math.round(a);
+    return a >= 1000 ? s + "R$ " + nf1.format(a / 1000) + (appLang === "en" ? "k" : " mil") : s + "R$ " + Math.round(a);
   }
   function niceStep(raw) {
     var p = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10)), f = raw / p;
@@ -2018,7 +2018,7 @@ import { t, appLang, initLanguage, translateTree } from "./i18n.js";
     pts.forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.5" style="fill:var(--ink);stroke:var(--surface)" stroke-width="1.5"/>'; });
     D.months.forEach(function (k, i) {
       s += '<rect x="' + (ml + gw * i) + '" y="' + mt + '" width="' + gw + '" height="' + ph + '" fill="transparent"><title>' +
-        monthLabel(k) + "\nGanhos: " + brl.format(D.inc[i]) + "\nGastos: " + brl.format(D.exp[i]) + "\nResultado: " + brl.format(res[i]) + "</title></rect>";
+        monthLabel(k) + "\n" + tr("Ganhos") + ": " + brl.format(D.inc[i]) + "\n" + tr("Gastos") + ": " + brl.format(D.exp[i]) + "\n" + tr("Resultado") + ": " + brl.format(res[i]) + "</title></rect>";
     });
     box.innerHTML = s + "</svg>";
   }
@@ -2068,11 +2068,11 @@ import { t, appLang, initLanguage, translateTree } from "./i18n.js";
     var wrap = $("#x-stock-wrap"), sel = $("#x-stock"), prev = sel.value;
     wrap.hidden = !type; sel.innerHTML = "";
     if (!type) return;
-    var add = function (v, t2) { var o = document.createElement("option"); o.value = v; o.textContent = t2; sel.appendChild(o); };
+    var add = function (v, txt, user) { var o = document.createElement("option"); o.value = v; o.textContent = txt; if (user) o.setAttribute("data-user", ""); sel.appendChild(o); };
     var list = inventory.filter(function (i) { return i.type === type; })
       .sort(function (a, b) { return (a.name || "").localeCompare(b.name || "", "pt-BR"); });
     add("", list.length ? "Nenhum (digitar a descrição)" : "Estoque vazio");
-    list.forEach(function (i) { add(i.id, (i.name || "Sem nome") + (i.price > 0 ? ", " + brl.format(i.price) : "")); });
+    list.forEach(function (i) { add(i.id, (i.name || tr("Sem nome")) + (i.price > 0 ? ", " + brl.format(i.price) : ""), true); });
     sel.value = list.some(function (i) { return i.id === prev; }) ? prev : "";
   }
   function initXForm() {
